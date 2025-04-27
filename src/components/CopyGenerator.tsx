@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CopyGeneratorProps {
   imageUrl: string | null;
@@ -30,7 +31,7 @@ const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProp
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!imageUrl) {
@@ -50,13 +51,34 @@ const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProp
       });
       return;
     }
-    
-    onGenerate({
-      includeEmojis,
-      includeHashtags,
-      customHashtags,
-      targetAudience,
-    });
+
+    try {
+      const { data: generationResponse, error } = await supabase.functions.invoke('generate-copy', {
+        body: {
+          imageUrl,
+          includeEmojis,
+          customHashtags: includeHashtags ? customHashtags : '',
+          targetAudience
+        },
+      });
+
+      if (error) throw error;
+
+      onGenerate({
+        includeEmojis,
+        includeHashtags,
+        customHashtags,
+        targetAudience,
+      });
+
+    } catch (error) {
+      console.error('Error generating copy:', error);
+      toast({
+        title: "Erro",
+        description: "Houve um erro ao gerar o texto. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
   
   return (
