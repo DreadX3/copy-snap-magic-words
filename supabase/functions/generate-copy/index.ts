@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, includeEmojis, customHashtags, targetAudience } = await req.json();
+    const { imageUrl, includeEmojis, customHashtags, targetAudience, imageDescription } = await req.json();
 
     if (!imageUrl) {
       return new Response(
@@ -35,6 +35,7 @@ serve(async (req) => {
       You are an expert e-commerce copywriter.
       Create 3 short, compelling product copy variations for social media.
       
+      Image description: ${imageDescription || 'No description provided'}
       Target audience: ${targetAudience}
       
       Preferences:
