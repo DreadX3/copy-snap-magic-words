@@ -109,6 +109,12 @@ const GeneratorPanel = () => {
     <div className="grid md:grid-cols-3 gap-8">
       <div className="md:col-span-2">
         <div className="space-y-8">
+          {!user?.isPro && (
+            <div className="md:hidden">
+              <UsageStats />
+            </div>
+          )}
+          
           <Card>
             <CardHeader>
               <CardTitle>Imagem do produto</CardTitle>
@@ -144,11 +150,14 @@ const GeneratorPanel = () => {
               results={copyResults}
               onSelectResult={setSelectedResult}
               selectedResult={selectedResult}
+              imageUrl={imageUrl}
             />
           )}
         </div>
       </div>
-      <SidePanel />
+      <div className="hidden md:block">
+        <SidePanel />
+      </div>
     </div>
   );
 };
