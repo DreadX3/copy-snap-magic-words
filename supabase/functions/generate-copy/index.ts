@@ -26,6 +26,11 @@ serve(async (req) => {
       );
     }
 
+    console.log('Processing request with image and parameters...');
+    console.log('Target audience:', targetAudience);
+    console.log('Text length:', textLength);
+    console.log('Theme:', theme);
+
     const maxLength = textLength === 'short' ? 300 : 1000;
     const styleInstruction = textLength === 'short' 
       ? 'seja objetivo, direto e focado'
@@ -33,19 +38,17 @@ serve(async (req) => {
 
     const prompt = `
       Você é um especialista em copywriting para e-commerce.
-      Crie 3 variações de texto para mídia social com as seguintes especificações:
       
-      Imagem: ${imageDescription}
-      Tema personalizado: ${theme}
-      Público-alvo: ${targetAudience}
+      INSTRUÇÕES IMPORTANTES:
+      1. ANALISE CUIDADOSAMENTE A IMAGEM que estou enviando
+      2. A imagem mostra um produto real que precisa de texto persuasivo para mídia social
+      3. Combine sua análise da imagem com o tema fornecido: "${theme}"
+      4. Crie 3 variações de copywriting para mídia social baseadas DIRETAMENTE no que você VÊ na imagem
+      5. O texto deve claramente se referir às características visíveis do produto na imagem
       
-      Por favor:
-      1. Analise cuidadosamente o conteúdo da imagem descrita
-      2. Considere o tema personalizado fornecido
-      3. Combine essas informações para gerar um texto relevante e persuasivo
-      4. ${styleInstruction}
-      
-      Preferências:
+      Especificações adicionais:
+      - Público-alvo: ${targetAudience}
+      - ${styleInstruction}
       - Incluir emojis: ${includeEmojis ? 'sim' : 'não'}
       - Incluir hashtags automáticas: sim
       - Hashtags personalizadas: ${customHashtags ? customHashtags : 'nenhuma'}
@@ -54,6 +57,7 @@ serve(async (req) => {
       Seja criativo, emocional e objetivo, incentivando a ação.
       
       Formate sua resposta em três parágrafos separados, um para cada variação.
+      NÃO inclua numeração, títulos ou explicações adicionais na resposta.
     `;
 
     const requestBody = {
@@ -81,6 +85,7 @@ serve(async (req) => {
     console.log('Received response from Gemini API');
 
     if (!data || !data.candidates || data.candidates.length === 0) {
+      console.error('Error: No valid response from Gemini API', data);
       throw new Error('No copy generated');
     }
 
@@ -88,6 +93,8 @@ serve(async (req) => {
       .split('\n\n')
       .filter((t: string) => t.trim() !== '')
       .slice(0, 3);
+    
+    console.log(`Successfully generated ${generatedTexts.length} variations`);
 
     return new Response(
       JSON.stringify({ success: true, copies: generatedTexts }),

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ImageUploader from "@/components/ImageUploader";
@@ -5,6 +6,7 @@ import CopyGenerator, { GenerateOptions } from "@/components/CopyGenerator";
 import CopyResults, { CopyResult } from "@/components/CopyResults";
 import { useToast } from "@/components/ui/use-toast";
 import SidePanel from "@/components/dashboard/SidePanel";
+import { supabase } from "@/integrations/supabase/client";
 
 const GeneratorPanel = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -25,33 +27,47 @@ const GeneratorPanel = () => {
     if (!imageUrl) return;
     setIsGenerating(true);
     
-    // Mock API call with timeout
-    setTimeout(() => {
-      // Generate mock results
-      const results: CopyResult[] = [
-        {
-          id: 1,
-          text: `✨ Transforme seu visual com nosso tênis ultra confortável! Design moderno e amortecimento que você precisa para seu dia a dia. ${options.includeEmojis ? '👟 🔥' : ''} ${options.includeHashtags ? '#EstiloUrbano #Conforto #MustHave' : ''}`,
-        },
-        {
-          id: 2,
-          text: `O tênis perfeito para quem não abre mão de conforto e estilo! Disponível em várias cores para combinar com todos os seus looks. ${options.includeEmojis ? '😍 👌' : ''} ${options.includeHashtags ? '#ModaEsportiva #LookDoDia #Tendência' : ''}`,
-        },
-        {
-          id: 3,
-          text: `Qualidade premium e design exclusivo para seus pés! Nosso novo tênis vai levar seu conforto a outro nível. Garanta já o seu! ${options.includeEmojis ? '🛍️ ⚡' : ''} ${options.includeHashtags ? '#CalçadoConfortável #NovaColeção #MelhorPreço' : ''}`,
-        },
-      ];
-      
-      setCopyResults(results);
-      setSelectedResult(results[0]);
-      setIsGenerating(false);
-      
-      toast({
-        title: "Copywriting gerado!",
-        description: "Escolha a melhor opção para o seu produto.",
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-copy', {
+        body: { 
+          imageUrl, 
+          includeEmojis: options.includeEmojis,
+          customHashtags: options.customHashtags,
+          targetAudience: options.targetAudience,
+          imageDescription: options.imageDescription,
+          theme: options.theme,
+          textLength: options.textLength
+        }
       });
-    }, 2000);
+      
+      if (error) throw error;
+      
+      if (data && data.copies && Array.isArray(data.copies)) {
+        const results: CopyResult[] = data.copies.map((text: string, index: number) => ({
+          id: index + 1,
+          text,
+        }));
+        
+        setCopyResults(results);
+        setSelectedResult(results[0]);
+        
+        toast({
+          title: "Copywriting gerado!",
+          description: "Escolha a melhor opção para o seu produto.",
+        });
+      } else {
+        throw new Error("Formato de resposta inválido");
+      }
+    } catch (error) {
+      console.error("Erro ao gerar copywriting:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o copywriting. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
