@@ -1,70 +1,32 @@
 
-import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import UsageStats from "@/components/UsageStats";
-import HistoryPanel from "./HistoryPanel";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { History, PlusCircle } from "lucide-react";
 
 const SidePanel = () => {
-  const [showHistory, setShowHistory] = useState(false);
-
   return (
     <div className="space-y-6">
-      <UsageStats />
-      
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Histórico</CardTitle>
-          <CardDescription>
-            Acesse suas gerações anteriores
-          </CardDescription>
+        <CardHeader>
+          <CardTitle>Dicas de uso</CardTitle>
+          <CardDescription>Como obter os melhores resultados</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={() => setShowHistory(true)}
-            variant="outline" 
-            className="w-full"
-          >
-            <History className="mr-2 h-4 w-4" />
-            Ver histórico
-          </Button>
-        </CardContent>
-      </Card>
-      
-      <Card className="bg-brand-50 border-brand-200">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Plano PRO</CardTitle>
-          <CardDescription>
-            Desbloqueie recursos avançados
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 mb-4 text-sm">
-            <li className="flex items-start">
-              <svg className="h-5 w-5 text-brand-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Gerações ilimitadas</span>
+          <ul className="space-y-4 text-sm">
+            <li>
+              <strong>Descrição da Imagem:</strong> Seja detalhado ao descrever o produto,
+              incluindo características visuais importantes.
             </li>
-            <li className="flex items-start">
-              <svg className="h-5 w-5 text-brand-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Histórico completo</span>
+            <li>
+              <strong>Tema:</strong> Defina o contexto ou mensagem principal que deseja transmitir
+              com seu copywriting.
             </li>
-            <li className="flex items-start">
-              <svg className="h-5 w-5 text-brand-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Recursos exclusivos</span>
+            <li>
+              <strong>Tipo de Texto:</strong> Escolha com base no canal onde será usado:
+              <ul className="ml-4 mt-2 space-y-2">
+                <li>• Texto curto: ideal para Instagram, Twitter</li>
+                <li>• Texto longo: melhor para Facebook, LinkedIn</li>
+              </ul>
             </li>
           </ul>
-          <Button className="w-full">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Assinar PRO
-          </Button>
         </CardContent>
       </Card>
     </div>

@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, includeEmojis, customHashtags, targetAudience, imageDescription } = await req.json();
+    const { imageUrl, includeEmojis, customHashtags, targetAudience, imageDescription, theme, textLength } = await req.json();
 
     if (!imageUrl) {
       return new Response(
@@ -26,27 +26,34 @@ serve(async (req) => {
       );
     }
 
-    // Fetch and convert image to base64
-    const imageResponse = await fetch(imageUrl);
-    const imageBlob = await imageResponse.blob();
-    const base64Image = await blobToBase64(imageBlob);
+    const maxLength = textLength === 'short' ? 300 : 1000;
+    const styleInstruction = textLength === 'short' 
+      ? 'seja objetivo, direto e focado'
+      : 'seja detalhista, descreva com mais profundidade e conte uma história envolvente';
 
     const prompt = `
-      You are an expert e-commerce copywriter.
-      Create 3 short, compelling product copy variations for social media.
+      Você é um especialista em copywriting para e-commerce.
+      Crie 3 variações de texto para mídia social com as seguintes especificações:
       
-      Image description: ${imageDescription || 'No description provided'}
-      Target audience: ${targetAudience}
+      Imagem: ${imageDescription}
+      Tema personalizado: ${theme}
+      Público-alvo: ${targetAudience}
       
-      Preferences:
-      - Include emojis: ${includeEmojis ? 'yes' : 'no'}
-      - Include automatic hashtags: yes
-      - Custom hashtags: ${customHashtags ? customHashtags : 'none'}
+      Por favor:
+      1. Analise cuidadosamente o conteúdo da imagem descrita
+      2. Considere o tema personalizado fornecido
+      3. Combine essas informações para gerar um texto relevante e persuasivo
+      4. ${styleInstruction}
       
-      Each copy should be max 300 characters.
-      Be creative, emotional, objective, and encourage action.
+      Preferências:
+      - Incluir emojis: ${includeEmojis ? 'sim' : 'não'}
+      - Incluir hashtags automáticas: sim
+      - Hashtags personalizadas: ${customHashtags ? customHashtags : 'nenhuma'}
       
-      Format your response as three separate paragraphs, one for each variation.
+      Cada texto deve ter no máximo ${maxLength} caracteres.
+      Seja criativo, emocional e objetivo, incentivando a ação.
+      
+      Formate sua resposta em três parágrafos separados, um para cada variação.
     `;
 
     const requestBody = {
@@ -56,7 +63,7 @@ serve(async (req) => {
           {
             inlineData: {
               mimeType: "image/jpeg",
-              data: base64Image
+              data: imageUrl.split(',')[1] // Remove the data:image/jpeg;base64, prefix
             }
           }
         ]
@@ -95,10 +102,3 @@ serve(async (req) => {
     );
   }
 });
-
-async function blobToBase64(blob: Blob): Promise<string> {
-  const buffer = await blob.arrayBuffer();
-  const uint8Array = new Uint8Array(buffer);
-  const binary = uint8Array.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
-  return btoa(binary);
-}

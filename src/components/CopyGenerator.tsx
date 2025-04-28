@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -5,10 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { TextLengthOption } from "@/types/generator";
 
 interface CopyGeneratorProps {
   imageUrl: string | null;
@@ -22,6 +25,8 @@ export interface GenerateOptions {
   customHashtags: string;
   targetAudience: string;
   imageDescription: string;
+  theme: string;
+  textLength: TextLengthOption;
 }
 
 const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProps) => {
@@ -30,6 +35,8 @@ const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProp
   const [customHashtags, setCustomHashtags] = useState("");
   const [targetAudience, setTargetAudience] = useState("geral");
   const [imageDescription, setImageDescription] = useState("");
+  const [theme, setTheme] = useState("");
+  const [textLength, setTextLength] = useState<TextLengthOption>("short");
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -53,6 +60,15 @@ const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProp
       });
       return;
     }
+
+    if (!theme.trim()) {
+      toast({
+        title: "Erro",
+        description: "Por favor, adicione um tema para o copywriting",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!user?.isPro && user?.usedToday && user?.usedToday >= (user?.dailyQuota || 3)) {
       toast({
@@ -64,26 +80,15 @@ const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProp
     }
 
     try {
-      const { data: generationResponse, error } = await supabase.functions.invoke('generate-copy', {
-        body: {
-          imageUrl,
-          includeEmojis,
-          customHashtags: includeHashtags ? customHashtags : '',
-          targetAudience,
-          imageDescription: imageDescription.trim()
-        },
-      });
-
-      if (error) throw error;
-
       onGenerate({
         includeEmojis,
         includeHashtags,
         customHashtags,
         targetAudience,
-        imageDescription
+        imageDescription: imageDescription.trim(),
+        theme: theme.trim(),
+        textLength
       });
-
     } catch (error) {
       console.error('Error generating copy:', error);
       toast({
@@ -109,6 +114,38 @@ const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProp
             className="min-h-[100px]"
             required
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="theme" className="text-sm">
+            Tema do copywriting
+          </Label>
+          <Textarea
+            id="theme"
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            placeholder="Escreva um tema ou contexto específico para o copywriting..."
+            className="min-h-[100px]"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm">Tipo de texto</Label>
+          <RadioGroup
+            value={textLength}
+            onValueChange={(value: TextLengthOption) => setTextLength(value)}
+            className="flex flex-col space-y-2"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="short" id="short" />
+              <Label htmlFor="short">Texto curto e objetivo (máx. 300 caracteres)</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="long" id="long" />
+              <Label htmlFor="long">Texto longo e detalhado (máx. 1000 caracteres)</Label>
+            </div>
+          </RadioGroup>
         </div>
 
         <div className="flex items-center space-x-2">
