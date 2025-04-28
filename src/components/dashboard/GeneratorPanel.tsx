@@ -7,6 +7,7 @@ import CopyResults, { CopyResult } from "@/components/CopyResults";
 import { useToast } from "@/components/ui/use-toast";
 import SidePanel from "@/components/dashboard/SidePanel";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 const GeneratorPanel = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -15,7 +16,8 @@ const GeneratorPanel = () => {
   const [copyResults, setCopyResults] = useState<CopyResult[]>([]);
   const [selectedResult, setSelectedResult] = useState<CopyResult | null>(null);
   const { toast } = useToast();
-
+  const { user } = useAuth();
+  
   const handleImageUpload = (file: File, previewUrl: string) => {
     setImageFile(file);
     setImageUrl(previewUrl);
@@ -24,7 +26,18 @@ const GeneratorPanel = () => {
   };
 
   const handleGenerate = async (options: GenerateOptions) => {
-    if (!imageUrl) return;
+    if (!imageUrl || !user) return;
+    
+    // Check if free user has reached daily limit
+    if (!user.isPro && user.usedToday >= user.dailyQuota) {
+      toast({
+        title: "Limite diário atingido",
+        description: "Você atingiu o limite de gerações do plano FREE. Faça upgrade para o plano PRO para gerações ilimitadas.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsGenerating(true);
     
     try {
@@ -51,6 +64,28 @@ const GeneratorPanel = () => {
         setCopyResults(results);
         setSelectedResult(results[0]);
         
+        // Update user's daily usage counter
+        if (!user.isPro) {
+          const updatedUser = {
+            ...user,
+            usedToday: user.usedToday + 1
+          };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          // In a real app, this would update the database
+        }
+        
+        // Save to history
+        const historyItem = {
+          id: Date.now(),
+          imageUrl,
+          results,
+          date: new Date().toISOString(),
+        };
+        
+        const history = JSON.parse(localStorage.getItem("history") || "[]");
+        const updatedHistory = [historyItem, ...history];
+        localStorage.setItem("history", JSON.stringify(updatedHistory));
+        
         toast({
           title: "Copywriting gerado!",
           description: "Escolha a melhor opção para o seu produto.",
@@ -74,20 +109,17 @@ const GeneratorPanel = () => {
     <div className="grid md:grid-cols-3 gap-8">
       <div className="md:col-span-2">
         <div className="space-y-8">
-          <div>
-            <h1 className="text-2xl font-bold mb-6">Nova geração</h1>
-            <Card>
-              <CardHeader>
-                <CardTitle>Imagem do produto</CardTitle>
-                <CardDescription>
-                  Faça upload de uma imagem do seu produto para gerar textos de copywriting
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ImageUploader onImageUpload={handleImageUpload} />
-              </CardContent>
-            </Card>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Imagem do produto</CardTitle>
+              <CardDescription>
+                Faça upload de uma imagem do seu produto para gerar textos de copywriting
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ImageUploader onImageUpload={handleImageUpload} />
+            </CardContent>
+          </Card>
           
           {imageUrl && (
             <Card>

@@ -1,9 +1,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import UsageStats from "@/components/UsageStats";
+import PlanInfo from "@/components/dashboard/PlanInfo";
 
 const SidePanel = () => {
   return (
     <div className="space-y-6">
+      <UsageStats />
+      
+      <PlanInfo />
+      
       <Card>
         <CardHeader>
           <CardTitle>Dicas de uso</CardTitle>

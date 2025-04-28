@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { BadgeCheck } from "lucide-react";
 
 const UsageStats = () => {
-  const { user } = useAuth();
+  const { user, upgradeToPro } = useAuth();
   
   if (!user) return null;
   
@@ -14,6 +14,10 @@ const UsageStats = () => {
   const dailyQuota = user.dailyQuota || 3;
   const usedToday = user.usedToday || 0;
   const usagePercentage = (usedToday / dailyQuota) * 100;
+  
+  const handleUpgrade = () => {
+    upgradeToPro();
+  };
   
   return (
     <Card>
@@ -40,7 +44,7 @@ const UsageStats = () => {
             <Progress value={usagePercentage} className="h-2" />
             
             <div className="mt-4">
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full" onClick={handleUpgrade}>
                 Upgrade para PRO
               </Button>
             </div>
@@ -49,7 +53,7 @@ const UsageStats = () => {
         
         {user.isPro && (
           <div className="text-center text-sm text-gray-500">
-            Aproveite gerações ilimitadas e recursos exclusivos
+            Aproveite gerações ilimitadas e histórico das últimas 50 mensagens
           </div>
         )}
       </CardContent>

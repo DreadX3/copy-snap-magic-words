@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface User {
   id: string;
@@ -9,6 +10,7 @@ interface User {
   isPro: boolean;
   dailyQuota: number;
   usedToday: number;
+  plan: 'free' | 'pro';
 }
 
 interface AuthContextType {
@@ -18,6 +20,7 @@ interface AuthContextType {
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  upgradeToPro: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -50,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: "user-123",
           email: email,
           isPro: false,
+          plan: 'free',
           dailyQuota: 3,
           usedToday: 0,
         };
@@ -86,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: "user-" + Math.floor(Math.random() * 1000),
           email: email,
           isPro: false,
+          plan: 'free',
           dailyQuota: 3,
           usedToday: 0,
         };
@@ -111,6 +116,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const upgradeToPro = async () => {
+    try {
+      setLoading(true);
+      // Simulate upgrading to PRO plan
+      if (user) {
+        const updatedUser = {
+          ...user,
+          isPro: true,
+          plan: 'pro' as const,
+          dailyQuota: Infinity,
+        };
+        
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        
+        toast({
+          title: "Plano atualizado!",
+          description: "Você agora tem acesso ao plano PRO com gerações ilimitadas.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar plano",
+        description: "Não foi possível atualizar para o plano PRO. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
@@ -126,6 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         isAuthenticated: !!user,
+        upgradeToPro,
       }}
     >
       {children}

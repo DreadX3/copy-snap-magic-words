@@ -45,6 +45,7 @@ serve(async (req) => {
       3. Combine sua análise da imagem com o tema fornecido: "${theme}"
       4. Crie 3 variações de copywriting para mídia social baseadas DIRETAMENTE no que você VÊ na imagem
       5. O texto deve claramente se referir às características visíveis do produto na imagem
+      6. Seja detalhado em sua análise da imagem - descreva e mencione cores, formas, texturas e elementos visíveis
       
       Especificações adicionais:
       - Público-alvo: ${targetAudience}
