@@ -8,6 +8,7 @@ import { useToast } from "@/components/ui/use-toast";
 import SidePanel from "@/components/dashboard/SidePanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import UsageStats from "@/components/UsageStats";
 
 const GeneratorPanel = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
