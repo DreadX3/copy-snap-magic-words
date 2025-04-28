@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ImageUploader from "@/components/ImageUploader";
 import CopyGenerator, { GenerateOptions } from "@/components/CopyGenerator";
 import CopyResults, { CopyResult } from "@/components/CopyResults";
 import { useToast } from "@/components/ui/use-toast";
+import SidePanel from "@/components/dashboard/SidePanel";
 
 const GeneratorPanel = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
