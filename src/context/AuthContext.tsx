@@ -12,11 +12,13 @@ interface User {
   dailyQuota: number;
   usedToday: number;
   plan: 'free' | 'pro';
+  profileCompleted?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  register: (email: string, password: string) => Promise<void>;
   loginWithSocial: (provider: Provider) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -33,6 +35,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+      
+      return data;
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      return null;
+    }
+  };
+
   // Load user from localStorage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -45,25 +64,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
-          // Mock user data - in a real app, this would fetch from profiles table
-          const mockUser: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            isPro: false,
-            plan: 'free',
-            dailyQuota: 3,
-            usedToday: 0,
-          };
-          
-          setUser(mockUser);
-          localStorage.setItem("user", JSON.stringify(mockUser));
-          
-          if (event === 'SIGNED_IN') {
-            toast({
-              title: "Login bem-sucedido",
-              description: "Bem-vindo ao CopySnap AI!",
-            });
-            navigate("/dashboard");
+          try {
+            // Fetch user profile from profiles table
+            const profile = await fetchUserProfile(session.user.id);
+            
+            // Mock user data - in a real app, this would fetch from profiles table
+            const userData: User = {
+              id: session.user.id,
+              email: session.user.email || '',
+              isPro: false,
+              plan: 'free',
+              dailyQuota: 3,
+              usedToday: 0,
+              profileCompleted: profile?.profile_completed || false
+            };
+            
+            setUser(userData);
+            localStorage.setItem("user", JSON.stringify(userData));
+            
+            if (event === 'SIGNED_IN') {
+              toast({
+                title: "Login bem-sucedido",
+                description: "Bem-vindo ao CopySnap AI!",
+              });
+              
+              // If profile is not completed, redirect to profile completion page
+              if (!profile?.profile_completed) {
+                navigate("/profile-completion");
+              } else {
+                navigate("/dashboard");
+              }
+            }
+          } catch (error) {
+            console.error("Error processing auth state change:", error);
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
@@ -78,13 +111,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [navigate, toast]);
 
+  const register = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      toast({
+        title: "Erro de registro",
+        description: error instanceof Error ? error.message : "Ocorreu um erro durante o registro",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const loginWithSocial = async (provider: Provider) => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider: provider,
         options: {
-          redirectTo: window.location.origin + '/dashboard',
+          redirectTo: window.location.origin,
         }
       });
 
@@ -155,6 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         user,
         loading,
+        register,
         loginWithSocial,
         logout,
         isAuthenticated: !!user,
