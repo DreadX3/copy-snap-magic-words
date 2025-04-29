@@ -19,6 +19,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   register: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>; // <- Adicione esta linha
   loginWithSocial: (provider: Provider) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -134,7 +135,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     }
   };
-
+  
+  const login = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+  
+      if (error) throw error;
+    } catch (error) {
+      toast({
+        title: "Erro ao entrar",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao fazer login",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   const loginWithSocial = async (provider: Provider) => {
     try {
       setLoading(true);
@@ -213,6 +231,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         register,
+        login,
         loginWithSocial,
         logout,
         isAuthenticated: !!user,

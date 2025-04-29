@@ -3,7 +3,14 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
@@ -12,13 +19,16 @@ import { FaFacebook } from "react-icons/fa";
 
 const Login = () => {
   const { login, loginWithSocial, loading } = useAuth();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    await login(email, password); // função do seu AuthContext
+    try {
+      await login(email, password);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleGoogleLogin = async () => {
