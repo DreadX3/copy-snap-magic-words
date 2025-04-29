@@ -9,71 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      oficinas: {
-        Row: {
-          cnpj: string
-          created_at: string | null
-          criada_por: string | null
-          endereco: string | null
-          id: string
-          nome: string
-          telefone: string | null
-        }
-        Insert: {
-          cnpj: string
-          created_at?: string | null
-          criada_por?: string | null
-          endereco?: string | null
-          id?: string
-          nome: string
-          telefone?: string | null
-        }
-        Update: {
-          cnpj?: string
-          created_at?: string | null
-          criada_por?: string | null
-          endereco?: string | null
-          id?: string
-          nome?: string
-          telefone?: string | null
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          created_at: string | null
-          id: string
-          nome: string | null
-          oficina_id: string | null
-          tipo_usuario: Database["public"]["Enums"]["user_type"]
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id: string
-          nome?: string | null
-          oficina_id?: string | null
-          tipo_usuario?: Database["public"]["Enums"]["user_type"]
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          nome?: string | null
-          oficina_id?: string | null
-          tipo_usuario?: Database["public"]["Enums"]["user_type"]
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_oficina_id_fkey"
-            columns: ["oficina_id"]
-            isOneToOne: false
-            referencedRelation: "oficinas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
@@ -82,7 +18,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      user_type: "admin" | "oficina" | "funcionario" | "cliente"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -197,8 +133,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      user_type: ["admin", "oficina", "funcionario", "cliente"],
-    },
+    Enums: {},
   },
 } as const
