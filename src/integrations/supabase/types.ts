@@ -9,6 +9,30 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          is_super_admin: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_super_admin?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_super_admin?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company: string | null
@@ -36,6 +60,36 @@ export type Database = {
           phone?: string | null
           profile_completed?: boolean | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      text_generation_requests: {
+        Row: {
+          content_type: string
+          created_at: string
+          id: string
+          input_text: string | null
+          output_text: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          id?: string
+          input_text?: string | null
+          output_text?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          id?: string
+          input_text?: string | null
+          output_text?: string | null
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
