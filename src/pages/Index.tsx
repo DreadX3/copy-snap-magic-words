@@ -60,7 +60,7 @@ const Index = () => {
                 Como o CopySnap AI funciona
               </h2>
               <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
-                Simplifique seu marketing com copywriting gerado por IA em minutos.
+                Simplifique seu marketing com copywriting gerado por IA em segundos.
               </p>
             </div>
 
@@ -73,7 +73,7 @@ const Index = () => {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">Envie sua imagem</h3>
                   <p className="mt-2 text-base text-gray-500 text-center">
-                    Faça upload da foto do seu produto em segundos.
+                    Faça upload da foto do seu produto que deseja vender.
                   </p>
                 </div>
 
@@ -84,7 +84,7 @@ const Index = () => {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">Obtenha textos persuasivos</h3>
                   <p className="mt-2 text-base text-gray-500 text-center">
-                    Nossa IA gera 3 opções de copy personalizadas para seu público.
+                    Nossa IA gera 3 opções de textos personalizados para seu público.
                   </p>
                 </div>
 
