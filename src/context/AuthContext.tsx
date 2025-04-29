@@ -3,6 +3,7 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Provider } from "@supabase/supabase-js";
 
 interface User {
   id: string;
@@ -16,8 +17,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  loginWithSocial: (provider: Provider) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   upgradeToPro: () => Promise<void>;
@@ -40,38 +40,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
-  }, []);
+    
+    // Set up Supabase auth listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          // Mock user data - in a real app, this would fetch from profiles table
+          const mockUser: User = {
+            id: session.user.id,
+            email: session.user.email || '',
+            isPro: false,
+            plan: 'free',
+            dailyQuota: 3,
+            usedToday: 0,
+          };
+          
+          setUser(mockUser);
+          localStorage.setItem("user", JSON.stringify(mockUser));
+          
+          if (event === 'SIGNED_IN') {
+            toast({
+              title: "Login bem-sucedido",
+              description: "Bem-vindo ao CopySnap AI!",
+            });
+            navigate("/dashboard");
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          localStorage.removeItem("user");
+          navigate("/");
+        }
+      }
+    );
 
-  const login = async (email: string, password: string) => {
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast]);
+
+  const loginWithSocial = async (provider: Provider) => {
     try {
       setLoading(true);
-      // In a real app, this would be an API call
-      // For demo purposes, we'll simulate a successful login
-      if (email && password) {
-        // Mock user data
-        const mockUser: User = {
-          id: "user-123",
-          email: email,
-          isPro: false,
-          plan: 'free',
-          dailyQuota: 3,
-          usedToday: 0,
-        };
-        
-        setUser(mockUser);
-        localStorage.setItem("user", JSON.stringify(mockUser));
-        toast({
-          title: "Login bem-sucedido",
-          description: "Bem-vindo ao CopySnap AI!",
-        });
-        navigate("/dashboard");
-      } else {
-        throw new Error("Email e senha são obrigatórios");
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider,
+        options: {
+          redirectTo: window.location.origin + '/dashboard',
+        }
+      });
+
+      if (error) {
+        throw error;
       }
     } catch (error) {
       toast({
-        title: "Erro de login",
-        description: error instanceof Error ? error.message : "Ocorreu um erro durante o login",
+        title: "Erro de autenticação",
+        description: error instanceof Error ? error.message : "Ocorreu um erro durante a autenticação",
         variant: "destructive",
       });
     } finally {
@@ -79,40 +102,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (email: string, password: string) => {
+  const logout = async () => {
     try {
-      setLoading(true);
-      // In a real app, this would be an API call
-      // For demo purposes, we'll simulate a successful registration
-      if (email && password) {
-        // Mock user data
-        const mockUser: User = {
-          id: "user-" + Math.floor(Math.random() * 1000),
-          email: email,
-          isPro: false,
-          plan: 'free',
-          dailyQuota: 3,
-          usedToday: 0,
-        };
-        
-        setUser(mockUser);
-        localStorage.setItem("user", JSON.stringify(mockUser));
-        toast({
-          title: "Registro bem-sucedido",
-          description: "Sua conta foi criada com sucesso!",
-        });
-        navigate("/dashboard");
-      } else {
-        throw new Error("Email e senha são obrigatórios");
-      }
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      localStorage.removeItem("user");
+      navigate("/");
     } catch (error) {
       toast({
-        title: "Erro no registro",
-        description: error instanceof Error ? error.message : "Ocorreu um erro durante o registro",
+        title: "Erro ao sair",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao tentar sair",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -147,19 +150,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    navigate("/");
-  };
-
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
-        login,
-        register,
+        loginWithSocial,
         logout,
         isAuthenticated: !!user,
         upgradeToPro,
