@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,25 +9,51 @@ import {
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from "@/components/ui/card";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Loader2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const { login, loginWithSocial, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await login(email, password);
+
+      const { data: session } = await supabase.auth.getSession();
+
+      if (!session.session) {
+        throw new Error("Sessão não encontrada.");
+      }
+
+      const userId = session.session.user.id;
+
+      const { data: adminUser, error } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Erro ao verificar admin:", error);
+      }
+
+      if (adminUser) {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Erro no login:", err);
     }
   };
 
