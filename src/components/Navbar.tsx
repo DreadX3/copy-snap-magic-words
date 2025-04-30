@@ -33,11 +33,13 @@ const Navbar = () => {
                 </Link>
                 <Button 
                   variant="ghost" 
-                  onClick={logout} 
+                  onClick={async () => {
+                  await logout();
+                  }} 
                   className="text-gray-600 hover:text-gray-900"
                 >
-                  Sair
-                </Button>
+                   Sair
+                 </Button>
                 <div className="flex items-center space-x-2">
                   <div className="h-8 w-8 rounded-full bg-brand-600 flex items-center justify-center text-white">
                     {user.email.charAt(0).toUpperCase()}
@@ -84,7 +86,9 @@ const Navbar = () => {
                 </Link>
                 <Button 
                   variant="ghost" 
-                  onClick={logout} 
+                  onClick={async () => {
+                    await logout();
+                  }}
                   className="w-full text-left px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 >
                   Sair
