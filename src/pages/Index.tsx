@@ -52,7 +52,7 @@ const Index = () => {
               <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
                 Como o CopySnap AI funciona
               </h2>
-              <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">Textos de vendas criados automaticamente pela IA, prontos para converter posts em lucro!</p>
+              <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">Simplifique seu marketing com copywriting gerado por IA em segundos.</p>
             </div>
 
             <div className="mt-16">
