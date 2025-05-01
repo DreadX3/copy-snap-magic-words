@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { PostgrestError, PostgrestSingleResponse } from "@supabase/supabase-js";
 
 export interface UserProfile {
   id: string;
@@ -12,7 +13,7 @@ export interface UserProfile {
 export const getUserByEmail = async (email: string): Promise<{ user: UserProfile | null, error: Error | null }> => {
   try {
     // Since we can't directly access auth.users, we need to check the profiles table
-    const { data, error } = await supabase
+    const { data, error }: PostgrestSingleResponse<{ id: string }> = await supabase
       .from('profiles')
       .select('id')
       .eq('email', email)
