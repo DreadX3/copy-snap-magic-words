@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -82,7 +83,7 @@ const AdminUsers = ({ isSuperAdmin }: AdminUsersProps) => {
   const fetchAdminUsers = async () => {
     try {
       setIsLoading(true);
-      const { data: admins, error } = await (supabase as any)
+      const { data: admins, error } = await supabase
         .from('admin_users')
         .select('*');
       
@@ -114,19 +115,24 @@ const AdminUsers = ({ isSuperAdmin }: AdminUsersProps) => {
   // Update the getUserByEmail function to use listUsers and filter instead of getUserByEmail
   const getUserByEmail = async (email: string) => {
     try {
-      const { data, error } = await supabase.auth.admin.listUsers({});
+      // Since we can't directly access auth.users, we'll need to use an edge function or another approach
+      // For demo purposes, we'll simulate finding a user
+      const { data: existingUsers, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
       
       if (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching user:", error);
         return { user: null, error };
       }
-
-      const user = data.users.find(u => u.email === email);
       
-      if (!user) {
+      if (!existingUsers) {
         return { user: null, error: new Error('User not found') };
       }
       
+      const user = { id: existingUsers.id };
       return { user, error: null };
     } catch (error) {
       console.error("Error in getUserByEmail:", error);
@@ -152,7 +158,7 @@ const AdminUsers = ({ isSuperAdmin }: AdminUsersProps) => {
       }
 
       // Check if user is already an admin
-      const { data: existingAdmin, error: existingError } = await (supabase as any)
+      const { data: existingAdmin, error: existingError } = await supabase
         .from('admin_users')
         .select('*')
         .eq('user_id', user.id)
@@ -168,7 +174,7 @@ const AdminUsers = ({ isSuperAdmin }: AdminUsersProps) => {
       }
 
       // Add user as admin
-      const { error: addError } = await (supabase as any)
+      const { error: addError } = await supabase
         .from('admin_users')
         .insert([
           {
@@ -219,7 +225,7 @@ const AdminUsers = ({ isSuperAdmin }: AdminUsersProps) => {
     try {
       // Check if user is the last super admin
       if (selectedUser.is_super_admin) {
-        const { data: superAdmins, error: countError } = await (supabase as any)
+        const { data: superAdmins, error: countError } = await supabase
           .from('admin_users')
           .select('*')
           .eq('is_super_admin', true);
@@ -240,7 +246,7 @@ const AdminUsers = ({ isSuperAdmin }: AdminUsersProps) => {
       }
 
       // Remove admin
-      const { error: deleteError } = await (supabase as any)
+      const { error: deleteError } = await supabase
         .from('admin_users')
         .delete()
         .eq('id', selectedUser.id);
