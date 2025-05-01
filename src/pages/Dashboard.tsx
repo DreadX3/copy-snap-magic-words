@@ -5,6 +5,7 @@ import GeneratorPanel from "@/components/dashboard/GeneratorPanel";
 import HistoryPanel from "@/components/dashboard/HistoryPanel";
 import { Button } from "@/components/ui/button";
 import { History, PlusCircle } from "lucide-react";
+import UsageStats from "@/components/UsageStats"; // Add the missing import
 
 const Dashboard = () => {
   const [showHistory, setShowHistory] = useState(false);

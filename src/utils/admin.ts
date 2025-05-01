@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { PostgrestError, PostgrestSingleResponse } from "@supabase/supabase-js";
 
