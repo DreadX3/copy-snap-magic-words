@@ -1,5 +1,0 @@
-
-project_id = "nafhtovonxmvddrnvpzn"
-
-[functions.generate-copy]
-verify_jwt = true

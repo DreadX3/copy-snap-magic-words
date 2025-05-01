@@ -1,14 +1,13 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface CopyGeneratorProps {
   imageUrl: string | null;
@@ -21,7 +20,6 @@ export interface GenerateOptions {
   includeHashtags: boolean;
   customHashtags: string;
   targetAudience: string;
-  imageDescription: string;
 }
 
 const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProps) => {
@@ -29,26 +27,16 @@ const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProp
   const [includeHashtags, setIncludeHashtags] = useState(true);
   const [customHashtags, setCustomHashtags] = useState("");
   const [targetAudience, setTargetAudience] = useState("geral");
-  const [imageDescription, setImageDescription] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!imageUrl) {
       toast({
         title: "Erro",
         description: "Por favor, faça upload de uma imagem primeiro",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!imageDescription.trim()) {
-      toast({
-        title: "Erro",
-        description: "Por favor, adicione uma descrição da imagem",
         variant: "destructive",
       });
       return;
@@ -62,55 +50,18 @@ const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProp
       });
       return;
     }
-
-    try {
-      const { data: generationResponse, error } = await supabase.functions.invoke('generate-copy', {
-        body: {
-          imageUrl,
-          includeEmojis,
-          customHashtags: includeHashtags ? customHashtags : '',
-          targetAudience,
-          imageDescription: imageDescription.trim()
-        },
-      });
-
-      if (error) throw error;
-
-      onGenerate({
-        includeEmojis,
-        includeHashtags,
-        customHashtags,
-        targetAudience,
-        imageDescription
-      });
-
-    } catch (error) {
-      console.error('Error generating copy:', error);
-      toast({
-        title: "Erro",
-        description: "Houve um erro ao gerar o texto. Por favor, tente novamente.",
-        variant: "destructive",
-      });
-    }
+    
+    onGenerate({
+      includeEmojis,
+      includeHashtags,
+      customHashtags,
+      targetAudience,
+    });
   };
   
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="description" className="text-sm">
-            Descrição da imagem
-          </Label>
-          <Textarea
-            id="description"
-            value={imageDescription}
-            onChange={(e) => setImageDescription(e.target.value)}
-            placeholder="Descreva o produto na imagem e seus principais atributos..."
-            className="min-h-[100px]"
-            required
-          />
-        </div>
-
         <div className="flex items-center space-x-2">
           <Checkbox
             id="emojis"
