@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +49,11 @@ interface AdminUser {
   user_id: string;
   is_super_admin: boolean;
   created_at: string;
+  email?: string;
+}
+
+interface UserProfile {
+  id: string;
   email?: string;
 }
 
@@ -112,12 +116,11 @@ const AdminUsers = ({ isSuperAdmin }: AdminUsersProps) => {
     }
   };
 
-  // Update the getUserByEmail function to use listUsers and filter instead of getUserByEmail
-  const getUserByEmail = async (email: string) => {
+  // Update the getUserByEmail function with proper typing
+  const getUserByEmail = async (email: string): Promise<{ user: UserProfile | null, error: Error | null }> => {
     try {
-      // Since we can't directly access auth.users, we'll need to use an edge function or another approach
-      // For demo purposes, we'll simulate finding a user
-      const { data: existingUsers, error } = await supabase
+      // Since we can't directly access auth.users, we need to check the profiles table
+      const { data: existingUser, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', email)
@@ -128,15 +131,14 @@ const AdminUsers = ({ isSuperAdmin }: AdminUsersProps) => {
         return { user: null, error };
       }
       
-      if (!existingUsers) {
+      if (!existingUser) {
         return { user: null, error: new Error('User not found') };
       }
       
-      const user = { id: existingUsers.id };
-      return { user, error: null };
+      return { user: { id: existingUser.id }, error: null };
     } catch (error) {
       console.error("Error in getUserByEmail:", error);
-      return { user: null, error };
+      return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
     }
   };
 
