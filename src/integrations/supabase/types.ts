@@ -9,92 +9,70 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_users: {
+      oficinas: {
         Row: {
-          created_at: string
+          cnpj: string
+          created_at: string | null
+          criada_por: string | null
+          endereco: string | null
           id: string
-          is_super_admin: boolean
-          updated_at: string
-          user_id: string
+          nome: string
+          telefone: string | null
         }
         Insert: {
-          created_at?: string
+          cnpj: string
+          created_at?: string | null
+          criada_por?: string | null
+          endereco?: string | null
           id?: string
-          is_super_admin?: boolean
-          updated_at?: string
-          user_id: string
+          nome: string
+          telefone?: string | null
         }
         Update: {
-          created_at?: string
+          cnpj?: string
+          created_at?: string | null
+          criada_por?: string | null
+          endereco?: string | null
           id?: string
-          is_super_admin?: boolean
-          updated_at?: string
-          user_id?: string
+          nome?: string
+          telefone?: string | null
         }
         Relationships: []
       }
       profiles: {
         Row: {
-          company: string | null
           created_at: string | null
           id: string
-          is_admin: boolean | null
-          name: string | null
-          phone: string | null
-          profile_completed: boolean | null
+          nome: string | null
+          oficina_id: string | null
+          tipo_usuario: Database["public"]["Enums"]["user_type"]
           updated_at: string | null
         }
         Insert: {
-          company?: string | null
           created_at?: string | null
           id: string
-          is_admin?: boolean | null
-          name?: string | null
-          phone?: string | null
-          profile_completed?: boolean | null
+          nome?: string | null
+          oficina_id?: string | null
+          tipo_usuario?: Database["public"]["Enums"]["user_type"]
           updated_at?: string | null
         }
         Update: {
-          company?: string | null
           created_at?: string | null
           id?: string
-          is_admin?: boolean | null
-          name?: string | null
-          phone?: string | null
-          profile_completed?: boolean | null
+          nome?: string | null
+          oficina_id?: string | null
+          tipo_usuario?: Database["public"]["Enums"]["user_type"]
           updated_at?: string | null
         }
-        Relationships: []
-      }
-      text_generation_requests: {
-        Row: {
-          content_type: string
-          created_at: string
-          id: string
-          input_text: string | null
-          output_text: string | null
-          status: string
-          user_id: string
-        }
-        Insert: {
-          content_type: string
-          created_at?: string
-          id?: string
-          input_text?: string | null
-          output_text?: string | null
-          status?: string
-          user_id: string
-        }
-        Update: {
-          content_type?: string
-          created_at?: string
-          id?: string
-          input_text?: string | null
-          output_text?: string | null
-          status?: string
-          user_id?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_oficina_id_fkey"
+            columns: ["oficina_id"]
+            isOneToOne: false
+            referencedRelation: "oficinas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -104,7 +82,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_type: "admin" | "oficina" | "funcionario" | "cliente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -219,6 +197,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_type: ["admin", "oficina", "funcionario", "cliente"],
+    },
   },
 } as const

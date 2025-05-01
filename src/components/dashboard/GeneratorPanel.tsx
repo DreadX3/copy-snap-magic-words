@@ -5,10 +5,6 @@ import ImageUploader from "@/components/ImageUploader";
 import CopyGenerator, { GenerateOptions } from "@/components/CopyGenerator";
 import CopyResults, { CopyResult } from "@/components/CopyResults";
 import { useToast } from "@/components/ui/use-toast";
-import SidePanel from "@/components/dashboard/SidePanel";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/context/AuthContext";
-import UsageStats from "@/components/UsageStats";
 
 const GeneratorPanel = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -17,8 +13,7 @@ const GeneratorPanel = () => {
   const [copyResults, setCopyResults] = useState<CopyResult[]>([]);
   const [selectedResult, setSelectedResult] = useState<CopyResult | null>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
-  
+
   const handleImageUpload = (file: File, previewUrl: string) => {
     setImageFile(file);
     setImageUrl(previewUrl);
@@ -27,106 +22,56 @@ const GeneratorPanel = () => {
   };
 
   const handleGenerate = async (options: GenerateOptions) => {
-    if (!imageUrl || !user) return;
-    
-    // Check if free user has reached daily limit
-    if (!user.isPro && user.usedToday >= user.dailyQuota) {
-      toast({
-        title: "Limite diário atingido",
-        description: "Você atingiu o limite de gerações do plano FREE. Faça upgrade para o plano PRO para gerações ilimitadas.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+    if (!imageUrl) return;
     setIsGenerating(true);
     
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-copy', {
-        body: { 
-          imageUrl, 
-          includeEmojis: options.includeEmojis,
-          customHashtags: options.customHashtags,
-          targetAudience: options.targetAudience,
-          imageDescription: options.imageDescription,
-          theme: options.theme,
-          textLength: options.textLength
-        }
-      });
+    // Mock API call with timeout
+    setTimeout(() => {
+      // Generate mock results
+      const results: CopyResult[] = [
+        {
+          id: 1,
+          text: `✨ Transforme seu visual com nosso tênis ultra confortável! Design moderno e amortecimento que você precisa para seu dia a dia. ${options.includeEmojis ? '👟 🔥' : ''} ${options.includeHashtags ? '#EstiloUrbano #Conforto #MustHave' : ''}`,
+        },
+        {
+          id: 2,
+          text: `O tênis perfeito para quem não abre mão de conforto e estilo! Disponível em várias cores para combinar com todos os seus looks. ${options.includeEmojis ? '😍 👌' : ''} ${options.includeHashtags ? '#ModaEsportiva #LookDoDia #Tendência' : ''}`,
+        },
+        {
+          id: 3,
+          text: `Qualidade premium e design exclusivo para seus pés! Nosso novo tênis vai levar seu conforto a outro nível. Garanta já o seu! ${options.includeEmojis ? '🛍️ ⚡' : ''} ${options.includeHashtags ? '#CalçadoConfortável #NovaColeção #MelhorPreço' : ''}`,
+        },
+      ];
       
-      if (error) throw error;
-      
-      if (data && data.copies && Array.isArray(data.copies)) {
-        const results: CopyResult[] = data.copies.map((text: string, index: number) => ({
-          id: index + 1,
-          text,
-        }));
-        
-        setCopyResults(results);
-        setSelectedResult(results[0]);
-        
-        // Update user's daily usage counter
-        if (!user.isPro) {
-          const updatedUser = {
-            ...user,
-            usedToday: user.usedToday + 1
-          };
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-          // In a real app, this would update the database
-        }
-        
-        // Save to history
-        const historyItem = {
-          id: Date.now(),
-          imageUrl,
-          results,
-          date: new Date().toISOString(),
-        };
-        
-        const history = JSON.parse(localStorage.getItem("history") || "[]");
-        const updatedHistory = [historyItem, ...history];
-        localStorage.setItem("history", JSON.stringify(updatedHistory));
-        
-        toast({
-          title: "Copywriting gerado!",
-          description: "Escolha a melhor opção para o seu produto.",
-        });
-      } else {
-        throw new Error("Formato de resposta inválido");
-      }
-    } catch (error) {
-      console.error("Erro ao gerar copywriting:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível gerar o copywriting. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
+      setCopyResults(results);
+      setSelectedResult(results[0]);
       setIsGenerating(false);
-    }
+      
+      toast({
+        title: "Copywriting gerado!",
+        description: "Escolha a melhor opção para o seu produto.",
+      });
+    }, 2000);
   };
 
   return (
     <div className="grid md:grid-cols-3 gap-8">
       <div className="md:col-span-2">
         <div className="space-y-8">
-          {!user?.isPro && (
-            <div className="md:hidden">
-              <UsageStats />
-            </div>
-          )}
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Imagem do produto</CardTitle>
-              <CardDescription>
-                Faça upload de uma imagem do seu produto para gerar textos de copywriting
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ImageUploader onImageUpload={handleImageUpload} />
-            </CardContent>
-          </Card>
+          <div>
+            <h1 className="text-2xl font-bold mb-6">Nova geração</h1>
+            <Card>
+              <CardHeader>
+                <CardTitle>Imagem do produto</CardTitle>
+                <CardDescription>
+                  Faça upload de uma imagem do seu produto para gerar textos de copywriting
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ImageUploader onImageUpload={handleImageUpload} />
+              </CardContent>
+            </Card>
+          </div>
           
           {imageUrl && (
             <Card>
@@ -151,14 +96,11 @@ const GeneratorPanel = () => {
               results={copyResults}
               onSelectResult={setSelectedResult}
               selectedResult={selectedResult}
-              imageUrl={imageUrl}
             />
           )}
         </div>
       </div>
-      <div className="hidden md:block">
-        <SidePanel />
-      </div>
+      <SidePanel />
     </div>
   );
 };

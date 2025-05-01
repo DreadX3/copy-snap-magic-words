@@ -1,61 +1,13 @@
 
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('user_id')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        if (error) {
-          console.error("Error checking admin status:", error);
-          return;
-        }
-        
-        setIsAdmin(!!data);
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-      }
-    };
-    
-    checkAdminStatus();
-  }, [user]);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast({
-        title: "Logout bem-sucedido",
-        description: "Você foi desconectado com sucesso.",
-      });
-      navigate("/");
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      toast({
-        title: "Erro ao sair",
-        description: "Ocorreu um erro ao tentar sair. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <nav className="bg-white shadow-sm border-b">
@@ -79,18 +31,13 @@ const Navbar = () => {
                 <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 font-medium">
                   Dashboard
                 </Link>
-                {isAdmin && (
-                  <Link to="/admin" className="text-gray-600 hover:text-gray-900 px-3 py-2 font-medium">
-                    Admin
-                  </Link>
-                )}
                 <Button 
                   variant="ghost" 
-                  onClick={handleLogout} 
+                  onClick={logout} 
                   className="text-gray-600 hover:text-gray-900"
                 >
-                   Sair
-                 </Button>
+                  Sair
+                </Button>
                 <div className="flex items-center space-x-2">
                   <div className="h-8 w-8 rounded-full bg-brand-600 flex items-center justify-center text-white">
                     {user.email.charAt(0).toUpperCase()}
@@ -135,14 +82,9 @@ const Navbar = () => {
                 <Link to="/dashboard" className="block px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
                   Dashboard
                 </Link>
-                {isAdmin && (
-                  <Link to="/admin" className="block px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
-                    Admin
-                  </Link>
-                )}
                 <Button 
                   variant="ghost" 
-                  onClick={handleLogout}
+                  onClick={logout} 
                   className="w-full text-left px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 >
                   Sair

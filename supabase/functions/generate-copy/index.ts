@@ -17,7 +17,7 @@ serve(async (req) => {
   }
 
   try {
-    const { imageUrl, includeEmojis, customHashtags, targetAudience, imageDescription, theme, textLength } = await req.json();
+    const { imageUrl, includeEmojis, customHashtags, targetAudience, imageDescription } = await req.json();
 
     if (!imageUrl) {
       return new Response(
@@ -26,39 +26,27 @@ serve(async (req) => {
       );
     }
 
-    console.log('Processing request with image and parameters...');
-    console.log('Target audience:', targetAudience);
-    console.log('Text length:', textLength);
-    console.log('Theme:', theme);
-
-    const maxLength = textLength === 'short' ? 300 : 1000;
-    const styleInstruction = textLength === 'short' 
-      ? 'seja objetivo, direto e focado'
-      : 'seja detalhista, descreva com mais profundidade e conte uma história envolvente';
+    // Fetch and convert image to base64
+    const imageResponse = await fetch(imageUrl);
+    const imageBlob = await imageResponse.blob();
+    const base64Image = await blobToBase64(imageBlob);
 
     const prompt = `
-      Você é um especialista em copywriting para e-commerce.
+      You are an expert e-commerce copywriter.
+      Create 3 short, compelling product copy variations for social media.
       
-      INSTRUÇÕES IMPORTANTES:
-      1. ANALISE CUIDADOSAMENTE A IMAGEM que estou enviando
-      2. A imagem mostra um produto real que precisa de texto persuasivo para mídia social
-      3. Combine sua análise da imagem com o tema fornecido: "${theme}"
-      4. Crie 3 variações de copywriting para mídia social baseadas DIRETAMENTE no que você VÊ na imagem
-      5. O texto deve claramente se referir às características visíveis do produto na imagem
-      6. Seja detalhado em sua análise da imagem - descreva e mencione cores, formas, texturas e elementos visíveis
+      Image description: ${imageDescription || 'No description provided'}
+      Target audience: ${targetAudience}
       
-      Especificações adicionais:
-      - Público-alvo: ${targetAudience}
-      - ${styleInstruction}
-      - Incluir emojis: ${includeEmojis ? 'sim' : 'não'}
-      - Incluir hashtags automáticas: sim
-      - Hashtags personalizadas: ${customHashtags ? customHashtags : 'nenhuma'}
+      Preferences:
+      - Include emojis: ${includeEmojis ? 'yes' : 'no'}
+      - Include automatic hashtags: yes
+      - Custom hashtags: ${customHashtags ? customHashtags : 'none'}
       
-      Cada texto deve ter no máximo ${maxLength} caracteres.
-      Seja criativo, emocional e objetivo, incentivando a ação.
+      Each copy should be max 300 characters.
+      Be creative, emotional, objective, and encourage action.
       
-      Formate sua resposta em três parágrafos separados, um para cada variação.
-      NÃO inclua numeração, títulos ou explicações adicionais na resposta.
+      Format your response as three separate paragraphs, one for each variation.
     `;
 
     const requestBody = {
@@ -68,7 +56,7 @@ serve(async (req) => {
           {
             inlineData: {
               mimeType: "image/jpeg",
-              data: imageUrl.split(',')[1] // Remove the data:image/jpeg;base64, prefix
+              data: base64Image
             }
           }
         ]
@@ -86,7 +74,6 @@ serve(async (req) => {
     console.log('Received response from Gemini API');
 
     if (!data || !data.candidates || data.candidates.length === 0) {
-      console.error('Error: No valid response from Gemini API', data);
       throw new Error('No copy generated');
     }
 
@@ -94,8 +81,6 @@ serve(async (req) => {
       .split('\n\n')
       .filter((t: string) => t.trim() !== '')
       .slice(0, 3);
-    
-    console.log(`Successfully generated ${generatedTexts.length} variations`);
 
     return new Response(
       JSON.stringify({ success: true, copies: generatedTexts }),
@@ -110,3 +95,10 @@ serve(async (req) => {
     );
   }
 });
+
+async function blobToBase64(blob: Blob): Promise<string> {
+  const buffer = await blob.arrayBuffer();
+  const uint8Array = new Uint8Array(buffer);
+  const binary = uint8Array.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+  return btoa(binary);
+}

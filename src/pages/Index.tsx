@@ -1,10 +1,13 @@
+
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ArrowRight, MessageSquare, Upload, Share2, LineChart } from "lucide-react";
+
 const Index = () => {
-  return <div className="min-h-screen flex flex-col">
+  return (
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <main className="flex-1">
@@ -31,7 +34,11 @@ const Index = () => {
               <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:max-w-none lg:mx-0 lg:col-span-6 lg:flex lg:items-center">
                 <div className="relative mx-auto w-full rounded-lg shadow-lg lg:max-w-md">
                   <div className="relative block w-full bg-white rounded-lg overflow-hidden">
-                    <img className="w-full" src="https://plus.unsplash.com/premium_photo-1682125177822-63c27a3830ea?q=80&w=2187&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2787&q=80" alt="CopySnap AI Demo" />
+                    <img
+                      className="w-full"
+                      src="https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2787&q=80"
+                      alt="CopySnap AI Demo"
+                    />
                     <div className="absolute inset-0 w-full h-full flex items-center justify-center">
                       <div className="bg-white bg-opacity-85 backdrop-blur-sm p-6 rounded-lg shadow-xl max-w-xs">
                         <h3 className="text-lg font-bold mb-2">✨ Perfeito para o seu feed!</h3>
@@ -52,7 +59,9 @@ const Index = () => {
               <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
                 Como o CopySnap AI funciona
               </h2>
-              <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">Simplifique seu marketing com copywriting gerado por IA em segundos.</p>
+              <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
+                Simplifique seu marketing com copywriting gerado por IA em minutos.
+              </p>
             </div>
 
             <div className="mt-16">
@@ -64,7 +73,7 @@ const Index = () => {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">Envie sua imagem</h3>
                   <p className="mt-2 text-base text-gray-500 text-center">
-                    Faça upload da foto do seu produto que deseja vender.
+                    Faça upload da foto do seu produto em segundos.
                   </p>
                 </div>
 
@@ -75,7 +84,7 @@ const Index = () => {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">Obtenha textos persuasivos</h3>
                   <p className="mt-2 text-base text-gray-500 text-center">
-                    Nossa IA gera 3 opções de textos personalizados para seu público.
+                    Nossa IA gera 3 opções de copy personalizadas para seu público.
                   </p>
                 </div>
 
@@ -231,6 +240,8 @@ const Index = () => {
       </main>
       
       <Footer />
-    </div>;
+    </div>
+  );
 };
+
 export default Index;

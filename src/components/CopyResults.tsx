@@ -14,10 +14,9 @@ interface CopyResultsProps {
   results: CopyResult[];
   onSelectResult: (result: CopyResult) => void;
   selectedResult?: CopyResult | null;
-  imageUrl?: string; // Add imageUrl prop
 }
 
-const CopyResults = ({ results, onSelectResult, selectedResult, imageUrl }: CopyResultsProps) => {
+const CopyResults = ({ results, onSelectResult, selectedResult }: CopyResultsProps) => {
   const { toast } = useToast();
   const [copied, setCopied] = useState<number | null>(null);
   
@@ -36,38 +35,21 @@ const CopyResults = ({ results, onSelectResult, selectedResult, imageUrl }: Copy
   };
   
   const shareOnSocial = async (text: string, platform: string) => {
-    const shareData = {
-      title: 'CopySnap AI',
-      text: text,
-      files: [] as File[]
-    };
-
-    // If we have an imageUrl and it's a base64 string, convert it to a file
-    if (imageUrl && imageUrl.startsWith('data:')) {
+    if (navigator.share) {
       try {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        const file = new File([blob], "product-image.jpg", { type: "image/jpeg" });
-        shareData.files = [file];
-      } catch (error) {
-        console.error('Error converting image:', error);
-      }
-    }
-
-    if (navigator.share && navigator.canShare(shareData)) {
-      try {
-        await navigator.share(shareData);
+        await navigator.share({
+          title: 'CopySnap AI',
+          text: text,
+        });
         toast({
           title: "Compartilhado!",
-          description: `Texto e imagem compartilhados com sucesso`,
+          description: `Texto compartilhado com sucesso`,
         });
       } catch (error) {
         console.error('Erro ao compartilhar:', error);
-        // Fallback to copying
-        copyToClipboard(text, -1);
       }
     } else {
-      // Fallback for unsupported browsers
+      // Fallback para copiar
       copyToClipboard(text, -1);
     }
   };
