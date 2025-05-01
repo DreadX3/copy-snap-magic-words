@@ -12,7 +12,7 @@ export interface UserProfile {
 export const getUserByEmail = async (email: string): Promise<{ user: UserProfile | null, error: Error | null }> => {
   try {
     // Since we can't directly access auth.users, we need to check the profiles table
-    const { data: existingUser, error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('id')
       .eq('email', email)
@@ -23,11 +23,11 @@ export const getUserByEmail = async (email: string): Promise<{ user: UserProfile
       return { user: null, error };
     }
     
-    if (!existingUser) {
+    if (!data) {
       return { user: null, error: new Error('User not found') };
     }
     
-    return { user: { id: existingUser.id }, error: null };
+    return { user: { id: data.id }, error: null };
   } catch (error) {
     console.error("Error in getUserByEmail:", error);
     return { user: null, error: error instanceof Error ? error : new Error('Unknown error') };
