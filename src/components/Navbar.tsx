@@ -1,13 +1,34 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Logout bem-sucedido",
+        description: "Você foi desconectado com sucesso.",
+      });
+      navigate("/");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      toast({
+        title: "Erro ao sair",
+        description: "Ocorreu um erro ao tentar sair. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <nav className="bg-white shadow-sm border-b">
@@ -33,9 +54,7 @@ const Navbar = () => {
                 </Link>
                 <Button 
                   variant="ghost" 
-                  onClick={async () => {
-                  await logout();
-                  }} 
+                  onClick={handleLogout} 
                   className="text-gray-600 hover:text-gray-900"
                 >
                    Sair
@@ -86,9 +105,7 @@ const Navbar = () => {
                 </Link>
                 <Button 
                   variant="ghost" 
-                  onClick={async () => {
-                    await logout();
-                  }}
+                  onClick={handleLogout}
                   className="w-full text-left px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 >
                   Sair
