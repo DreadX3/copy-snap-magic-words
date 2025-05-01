@@ -55,6 +55,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Check if user is admin
+  const checkAdminStatus = async (userId: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (error) {
+        console.error("Error checking admin status:", error);
+        return false;
+      }
+      
+      return !!data;
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      return false;
+    }
+  };
+
   // Load user from localStorage on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -70,6 +91,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           try {
             // Fetch user profile from profiles table
             const profile = await fetchUserProfile(session.user.id);
+            
+            // Check admin status
+            const isAdmin = await checkAdminStatus(session.user.id);
             
             // Mock user data - in a real app, this would fetch from profiles table
             const userData: User = {
@@ -91,8 +115,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 description: "Bem-vindo ao CopySnap AI!",
               });
               
-              // If profile is not completed, redirect to profile completion page
-              if (profile && !profile.profile_completed) {
+              // Redirect based on admin status and profile completion
+              if (isAdmin) {
+                navigate("/admin");
+              } else if (profile && !profile.profile_completed) {
                 navigate("/profile-completion");
               } else {
                 navigate("/dashboard");

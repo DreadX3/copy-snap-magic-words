@@ -38,6 +38,7 @@ export type Database = {
           company: string | null
           created_at: string | null
           id: string
+          is_admin: boolean | null
           name: string | null
           phone: string | null
           profile_completed: boolean | null
@@ -47,6 +48,7 @@ export type Database = {
           company?: string | null
           created_at?: string | null
           id: string
+          is_admin?: boolean | null
           name?: string | null
           phone?: string | null
           profile_completed?: boolean | null
@@ -56,6 +58,7 @@ export type Database = {
           company?: string | null
           created_at?: string | null
           id?: string
+          is_admin?: boolean | null
           name?: string | null
           phone?: string | null
           profile_completed?: boolean | null

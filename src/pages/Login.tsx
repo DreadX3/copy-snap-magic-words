@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -17,12 +18,14 @@ import { Loader2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebook } from "react-icons/fa";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Login = () => {
   const { login, loginWithSocial, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,23 +40,51 @@ const Login = () => {
 
       const userId = session.session.user.id;
 
-      const { data: adminUser, error } = await supabase
+      // Check if user is an admin
+      const { data: adminUser, error: adminError } = await supabase
         .from("admin_users")
         .select("user_id")
         .eq("user_id", userId)
         .maybeSingle();
 
-      if (error) {
-        console.error("Erro ao verificar admin:", error);
+      if (adminError) {
+        console.error("Erro ao verificar admin:", adminError);
+        toast({
+          title: "Erro",
+          description: "Erro ao verificar permissões de administrador",
+          variant: "destructive",
+        });
       }
 
+      // If user is admin, redirect to admin dashboard
       if (adminUser) {
         navigate("/admin");
       } else {
-        navigate("/dashboard");
+        // Check if profile is completed
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("profile_completed")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Erro ao verificar perfil:", profileError);
+        }
+
+        // Redirect based on profile completion
+        if (profile && !profile.profile_completed) {
+          navigate("/profile-completion");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (err) {
       console.error("Erro no login:", err);
+      toast({
+        title: "Erro no login",
+        description: "Credenciais inválidas ou erro de conexão",
+        variant: "destructive",
+      });
     }
   };
 

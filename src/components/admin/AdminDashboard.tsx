@@ -1,7 +1,6 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import {
   Legend,
   Line,
@@ -113,23 +112,6 @@ const AdminDashboard = () => {
     );
   }
 
-  const chartConfig = {
-    users: {
-      label: "Usuários",
-      theme: {
-        light: "hsl(var(--chart-1))",
-        dark: "hsl(var(--chart-1))",
-      },
-    },
-    requests: {
-      label: "Gerações",
-      theme: {
-        light: "hsl(var(--chart-2))",
-        dark: "hsl(var(--chart-2))",
-      },
-    },
-  };
-
   return (
     <div className="space-y-8">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -187,10 +169,7 @@ const AdminDashboard = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-4">
-          <ChartContainer
-            config={chartConfig}
-            className="aspect-auto h-80"
-          >
+          <div className="aspect-auto h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={stats}
@@ -218,12 +197,6 @@ const AdminDashboard = () => {
                 <Legend
                   align="right"
                   verticalAlign="top"
-                  content={(props) => (
-                    <ChartLegendContent
-                      {...props}
-                      className="justify-end"
-                    />
-                  )}
                 />
                 <Line
                   type="monotone"
@@ -239,7 +212,7 @@ const AdminDashboard = () => {
                 />
               </LineChart>
             </ResponsiveContainer>
-          </ChartContainer>
+          </div>
         </CardContent>
       </Card>
 

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -112,13 +111,36 @@ const AdminUsers = ({ isSuperAdmin }: AdminUsersProps) => {
     }
   };
 
+  // Update the getUserByEmail function to use listUsers and filter instead of getUserByEmail
+  const getUserByEmail = async (email: string) => {
+    try {
+      const { data, error } = await supabase.auth.admin.listUsers({});
+      
+      if (error) {
+        console.error("Error fetching users:", error);
+        return { user: null, error };
+      }
+
+      const user = data.users.find(u => u.email === email);
+      
+      if (!user) {
+        return { user: null, error: new Error('User not found') };
+      }
+      
+      return { user, error: null };
+    } catch (error) {
+      console.error("Error in getUserByEmail:", error);
+      return { user: null, error };
+    }
+  };
+
   const handleAddAdmin = async (values: AddAdminFormValues) => {
     if (!isSuperAdmin) return;
     
     setIsAddingAdmin(true);
     try {
       // First check if user exists
-      const { data: user, error: userError } = await supabase.auth.admin.getUserByEmail(values.email);
+      const { user, error: userError } = await getUserByEmail(values.email);
       
       if (userError || !user) {
         toast({
