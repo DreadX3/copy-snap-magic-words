@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/lib/supabase";
 
 interface User {
   id: string;
@@ -30,39 +31,115 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Load user from localStorage on mount
+  // Carregar usuário do localStorage ou do Supabase ao montar
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
+    const loadUser = async () => {
+      // Verificar se há sessão ativa no Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // Se tiver sessão no Supabase, buscar dados do perfil
+        const { data: profileData, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .single();
+          
+        if (!error && profileData) {
+          // Verificar se é admin
+          const { data: adminData } = await supabase
+            .from("admin_users")
+            .select("*")
+            .eq("user_id", session.user.id)
+            .single();
+
+          const userObj: User = {
+            id: session.user.id,
+            email: session.user.email || "",
+            isPro: profileData.is_pro || false,
+            dailyQuota: profileData.is_pro ? 999 : 3, // Ilimitado para PRO ou 3 para gratuito
+            usedToday: 0 // Poderia ser calculado com base em logs, se existir
+          };
+          
+          setUser(userObj);
+          localStorage.setItem("user", JSON.stringify(userObj));
+          
+          // Se for admin, redirecionar para o painel admin
+          if (adminData && window.location.pathname === '/login') {
+            navigate('/admin');
+          }
+        } else {
+          console.error("Erro ao buscar perfil:", error);
+        }
+      } else {
+        // Sem sessão Supabase, tenta carregar do localStorage (fallback para demo)
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+      }
+      
+      setLoading(false);
+    };
+    
+    loadUser();
+  }, [navigate]);
 
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
-      // In a real app, this would be an API call
-      // For demo purposes, we'll simulate a successful login
-      if (email && password) {
-        // Mock user data
-        const mockUser: User = {
-          id: "user-123",
-          email: email,
-          isPro: false,
-          dailyQuota: 3,
-          usedToday: 0,
+      
+      // Tentar login via Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        // Buscar dados do perfil após login
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.user.id)
+          .single();
+          
+        if (profileError && profileError.code !== 'PGRST116') {
+          // PGRST116 significa que não encontrou registros, neste caso criamos um novo perfil
+          console.error("Erro ao buscar perfil:", profileError);
+        }
+
+        // Verificar se é admin
+        const { data: adminData } = await supabase
+          .from("admin_users")
+          .select("*")
+          .eq("user_id", data.user.id)
+          .single();
+
+        // Para demonstração, se não encontrar perfil, criar um novo
+        const userObj: User = {
+          id: data.user.id,
+          email: data.user.email || "",
+          isPro: profileData?.is_pro || false,
+          dailyQuota: profileData?.is_pro ? 999 : 3,
+          usedToday: 0
         };
         
-        setUser(mockUser);
-        localStorage.setItem("user", JSON.stringify(mockUser));
+        setUser(userObj);
+        localStorage.setItem("user", JSON.stringify(userObj));
+        
         toast({
           title: "Login bem-sucedido",
           description: "Bem-vindo ao CopySnap AI!",
         });
-        navigate("/dashboard");
-      } else {
-        throw new Error("Email e senha são obrigatórios");
+        
+        // Redirecionar admin para dashboard admin
+        if (adminData) {
+          navigate("/admin");
+        } else {
+          navigate("/dashboard");
+        }
       }
     } catch (error) {
       toast({
@@ -78,27 +155,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (email: string, password: string) => {
     try {
       setLoading(true);
-      // In a real app, this would be an API call
-      // For demo purposes, we'll simulate a successful registration
-      if (email && password) {
-        // Mock user data
-        const mockUser: User = {
-          id: "user-" + Math.floor(Math.random() * 1000),
-          email: email,
+      
+      // Registrar via Supabase
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        // Criar perfil para o novo usuário
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .insert([
+            { 
+              id: data.user.id,
+              is_pro: false,
+              registered_at: new Date().toISOString()
+            }
+          ]);
+          
+        if (profileError) {
+          console.error("Erro ao criar perfil:", profileError);
+        }
+        
+        const userObj: User = {
+          id: data.user.id,
+          email: data.user.email || "",
           isPro: false,
           dailyQuota: 3,
-          usedToday: 0,
+          usedToday: 0
         };
         
-        setUser(mockUser);
-        localStorage.setItem("user", JSON.stringify(mockUser));
+        setUser(userObj);
+        localStorage.setItem("user", JSON.stringify(userObj));
+        
         toast({
           title: "Registro bem-sucedido",
           description: "Sua conta foi criada com sucesso!",
         });
         navigate("/dashboard");
-      } else {
-        throw new Error("Email e senha são obrigatórios");
       }
     } catch (error) {
       toast({
@@ -111,7 +208,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Logout do Supabase
+    await supabase.auth.signOut();
+    
     setUser(null);
     localStorage.removeItem("user");
     navigate("/");

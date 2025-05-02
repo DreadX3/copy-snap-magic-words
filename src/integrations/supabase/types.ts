@@ -33,15 +33,38 @@ export type Database = {
         }
         Relationships: []
       }
+      content_shares: {
+        Row: {
+          content_type: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company: string | null
           created_at: string | null
           id: string
           is_admin: boolean | null
+          is_pro: boolean | null
           name: string | null
           phone: string | null
           profile_completed: boolean | null
+          registered_at: string | null
           updated_at: string | null
         }
         Insert: {
@@ -49,9 +72,11 @@ export type Database = {
           created_at?: string | null
           id: string
           is_admin?: boolean | null
+          is_pro?: boolean | null
           name?: string | null
           phone?: string | null
           profile_completed?: boolean | null
+          registered_at?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -59,9 +84,11 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_admin?: boolean | null
+          is_pro?: boolean | null
           name?: string | null
           phone?: string | null
           profile_completed?: boolean | null
+          registered_at?: string | null
           updated_at?: string | null
         }
         Relationships: []
