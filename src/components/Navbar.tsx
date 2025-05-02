@@ -31,6 +31,11 @@ const Navbar = () => {
                 <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 font-medium">
                   Dashboard
                 </Link>
+                {user.isAdmin && (
+                  <Link to="/admin" className="text-gray-600 hover:text-gray-900 px-3 py-2 font-medium">
+                    Admin
+                  </Link>
+                )}
                 <Button 
                   variant="ghost" 
                   onClick={logout} 
@@ -82,6 +87,11 @@ const Navbar = () => {
                 <Link to="/dashboard" className="block px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
                   Dashboard
                 </Link>
+                {user.isAdmin && (
+                  <Link to="/admin" className="block px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
+                    Admin
+                  </Link>
+                )}
                 <Button 
                   variant="ghost" 
                   onClick={logout} 

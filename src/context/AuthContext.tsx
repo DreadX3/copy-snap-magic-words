@@ -10,6 +10,7 @@ interface User {
   isPro: boolean;
   dailyQuota: number;
   usedToday: number;
+  isAdmin: boolean; // Adicionando propriedade isAdmin
 }
 
 interface AuthContextType {
@@ -47,25 +48,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
         if (!error && profileData) {
           // Verificar se é admin
-          const { data: adminData } = await supabase
+          const { data: adminData, error: adminError } = await supabase
             .from("admin_users")
             .select("*")
             .eq("user_id", session.user.id)
             .single();
 
+          console.log("Admin data:", adminData, "Admin error:", adminError);
+          
+          const isAdmin = adminError ? false : !!adminData;
+          
           const userObj: User = {
             id: session.user.id,
             email: session.user.email || "",
             isPro: profileData.is_pro || false,
             dailyQuota: profileData.is_pro ? 999 : 3, // Ilimitado para PRO ou 3 para gratuito
-            usedToday: 0 // Poderia ser calculado com base em logs, se existir
+            usedToday: 0, // Poderia ser calculado com base em logs, se existir
+            isAdmin: isAdmin
           };
           
           setUser(userObj);
           localStorage.setItem("user", JSON.stringify(userObj));
           
           // Se for admin, redirecionar para o painel admin
-          if (adminData && window.location.pathname === '/login') {
+          if (isAdmin && window.location.pathname === '/login') {
             navigate('/admin');
           }
         } else {
@@ -111,19 +117,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Verificar se é admin
-        const { data: adminData } = await supabase
+        const { data: adminData, error: adminError } = await supabase
           .from("admin_users")
           .select("*")
           .eq("user_id", data.user.id)
           .single();
 
+        console.log("Login admin data:", adminData, "Admin error:", adminError);
+        
+        const isAdmin = adminError ? false : !!adminData;
+        
         // Para demonstração, se não encontrar perfil, criar um novo
         const userObj: User = {
           id: data.user.id,
           email: data.user.email || "",
           isPro: profileData?.is_pro || false,
           dailyQuota: profileData?.is_pro ? 999 : 3,
-          usedToday: 0
+          usedToday: 0,
+          isAdmin: isAdmin
         };
         
         setUser(userObj);
@@ -135,7 +146,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         
         // Redirecionar admin para dashboard admin
-        if (adminData) {
+        if (isAdmin) {
+          console.log("Redirecionando para /admin");
           navigate("/admin");
         } else {
           navigate("/dashboard");

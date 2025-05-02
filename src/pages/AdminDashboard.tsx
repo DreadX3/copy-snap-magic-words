@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -71,11 +70,46 @@ const AdminDashboard = () => {
     const checkIfIsAdmin = async () => {
       if (!user) return;
 
+      console.log("Verificando se o usuário é admin:", user.email);
+      
+      // Verificar se usuário específico é admin (para debug)
+      if (user.email === "dreadx3@gmail.com") {
+        console.log("Usuário dreadx3@gmail.com detectado, garantindo acesso admin");
+        // Verificar se já existe na tabela admin_users
+        const { data: existingAdmin } = await supabase
+          .from("admin_users")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+        
+        // Se não existir, adicionar como admin
+        if (!existingAdmin) {
+          console.log("Adicionando dreadx3@gmail.com como admin");
+          await supabase
+            .from("admin_users")
+            .insert({ user_id: user.id });
+        }
+        
+        setIsAdmin(true);
+        fetchStats();
+        return;
+      }
+
+      // Verificação normal para outros usuários
+      if (user.isAdmin) {
+        console.log("Usuário é admin pelo contexto");
+        setIsAdmin(true);
+        fetchStats();
+        return;
+      }
+
       const { data, error } = await supabase
         .from("admin_users")
         .select("*")
         .eq("user_id", user.id)
         .single();
+
+      console.log("Admin check result:", data, error);
 
       if (error) {
         console.error("Erro ao verificar se é admin:", error);
@@ -89,6 +123,7 @@ const AdminDashboard = () => {
       }
 
       if (data) {
+        console.log("Usuário confirmado como admin");
         setIsAdmin(true);
         fetchStats();
       } else {
@@ -104,7 +139,6 @@ const AdminDashboard = () => {
     checkIfIsAdmin();
   }, [user, loading, isAuthenticated, navigate, toast]);
 
-  // Buscar estatísticas
   const fetchStats = async () => {
     try {
       setLoadingStats(true);
