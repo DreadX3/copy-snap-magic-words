@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -13,33 +14,29 @@ import { ChartContainer } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/lib/supabase";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   CalendarDays, 
   Users, 
   UserCheck, 
   Share, 
-  TrendingUp
+  TrendingUp,
+  Calendar
 } from "lucide-react";
 
 interface StatsData {
   totalUsers: number;
   proUsers: number;
   freeUsers: number;
-  usersLast24h: number;
-  usersLast7d: number;
-  usersLast30d: number;
-  usersLast60d: number;
-  usersLast90d: number;
-  generationsLast24h: number;
-  generationsLast7d: number;
-  generationsLast30d: number;
-  generationsLast60d: number;
-  generationsLast90d: number;
-  sharesLast24h: number;
-  sharesLast7d: number;
-  sharesLast30d: number;
-  sharesLast60d: number;
-  sharesLast90d: number;
+  usersInPeriod: number;
+  generationsInPeriod: number;
+  sharesInPeriod: number;
 }
 
 interface TimeRangeData {
@@ -49,12 +46,24 @@ interface TimeRangeData {
   shares: number;
 }
 
+type PeriodType = "24h" | "7d" | "30d" | "60d" | "90d" | "all";
+
+const periodOptions = [
+  { value: "24h", label: "Últimas 24 horas" },
+  { value: "7d", label: "Últimos 7 dias" },
+  { value: "30d", label: "Últimos 30 dias" },
+  { value: "60d", label: "Últimos 60 dias" },
+  { value: "90d", label: "Últimos 90 dias" },
+  { value: "all", label: "Todo período" }
+];
+
 const AdminDashboard = () => {
   const { user, loading, isAuthenticated } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [stats, setStats] = useState<StatsData | null>(null);
   const [timeRangeData, setTimeRangeData] = useState<TimeRangeData[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>("30d");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -91,7 +100,7 @@ const AdminDashboard = () => {
         }
         
         setIsAdmin(true);
-        fetchStats();
+        fetchStats(selectedPeriod);
         return;
       }
 
@@ -99,7 +108,7 @@ const AdminDashboard = () => {
       if (user.isAdmin) {
         console.log("Usuário é admin pelo contexto");
         setIsAdmin(true);
-        fetchStats();
+        fetchStats(selectedPeriod);
         return;
       }
 
@@ -125,7 +134,7 @@ const AdminDashboard = () => {
       if (data) {
         console.log("Usuário confirmado como admin");
         setIsAdmin(true);
-        fetchStats();
+        fetchStats(selectedPeriod);
       } else {
         toast({
           title: "Acesso negado",
@@ -137,9 +146,35 @@ const AdminDashboard = () => {
     };
 
     checkIfIsAdmin();
-  }, [user, loading, isAuthenticated, navigate, toast]);
+  }, [user, loading, isAuthenticated, navigate, toast, selectedPeriod]);
 
-  const fetchStats = async () => {
+  const handlePeriodChange = (period: PeriodType) => {
+    setSelectedPeriod(period);
+    fetchStats(period);
+  };
+
+  const getDateForPeriod = (period: PeriodType): Date | null => {
+    const now = new Date();
+    
+    switch (period) {
+      case "24h":
+        return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      case "7d":
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case "30d":
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case "60d":
+        return new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+      case "90d":
+        return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      case "all":
+        return null; // Retorna null para indicar todos os períodos
+      default:
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+  };
+
+  const fetchStats = async (period: PeriodType) => {
     try {
       setLoadingStats(true);
 
@@ -150,40 +185,16 @@ const AdminDashboard = () => {
 
       if (profilesError) throw profilesError;
 
-      const now = new Date();
-      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
-      const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-
+      const startDate = getDateForPeriod(period);
+      
       // Filtrar usuários por data de registro
       const proUsers = profilesData?.filter(user => user.is_pro) || [];
       const freeUsers = profilesData?.filter(user => !user.is_pro) || [];
       
-      const usersLast24h = profilesData?.filter(user => {
+      const usersInPeriod = profilesData?.filter(user => {
+        if (!startDate) return true; // Se for "all", incluir todos
         const registeredAt = new Date(user.registered_at || '');
-        return registeredAt >= oneDayAgo;
-      }).length || 0;
-      
-      const usersLast7d = profilesData?.filter(user => {
-        const registeredAt = new Date(user.registered_at || '');
-        return registeredAt >= sevenDaysAgo;
-      }).length || 0;
-      
-      const usersLast30d = profilesData?.filter(user => {
-        const registeredAt = new Date(user.registered_at || '');
-        return registeredAt >= thirtyDaysAgo;
-      }).length || 0;
-      
-      const usersLast60d = profilesData?.filter(user => {
-        const registeredAt = new Date(user.registered_at || '');
-        return registeredAt >= sixtyDaysAgo;
-      }).length || 0;
-      
-      const usersLast90d = profilesData?.filter(user => {
-        const registeredAt = new Date(user.registered_at || '');
-        return registeredAt >= ninetyDaysAgo;
+        return registeredAt >= startDate;
       }).length || 0;
 
       // Obter gerações de conteúdo
@@ -194,29 +205,10 @@ const AdminDashboard = () => {
       if (generationsError) throw generationsError;
 
       // Contar gerações por período
-      const generationsLast24h = generationsData?.filter(gen => {
+      const generationsInPeriod = generationsData?.filter(gen => {
+        if (!startDate) return true; // Se for "all", incluir todos
         const createdAt = new Date(gen.created_at);
-        return createdAt >= oneDayAgo;
-      }).length || 0;
-      
-      const generationsLast7d = generationsData?.filter(gen => {
-        const createdAt = new Date(gen.created_at);
-        return createdAt >= sevenDaysAgo;
-      }).length || 0;
-      
-      const generationsLast30d = generationsData?.filter(gen => {
-        const createdAt = new Date(gen.created_at);
-        return createdAt >= thirtyDaysAgo;
-      }).length || 0;
-      
-      const generationsLast60d = generationsData?.filter(gen => {
-        const createdAt = new Date(gen.created_at);
-        return createdAt >= sixtyDaysAgo;
-      }).length || 0;
-      
-      const generationsLast90d = generationsData?.filter(gen => {
-        const createdAt = new Date(gen.created_at);
-        return createdAt >= ninetyDaysAgo;
+        return createdAt >= startDate;
       }).length || 0;
 
       // Obter compartilhamentos
@@ -227,38 +219,52 @@ const AdminDashboard = () => {
       if (sharesError) throw sharesError;
 
       // Contar compartilhamentos por período
-      const sharesLast24h = sharesData?.filter(share => {
+      const sharesInPeriod = sharesData?.filter(share => {
+        if (!startDate) return true; // Se for "all", incluir todos
         const createdAt = new Date(share.created_at);
-        return createdAt >= oneDayAgo;
-      }).length || 0;
-      
-      const sharesLast7d = sharesData?.filter(share => {
-        const createdAt = new Date(share.created_at);
-        return createdAt >= sevenDaysAgo;
-      }).length || 0;
-      
-      const sharesLast30d = sharesData?.filter(share => {
-        const createdAt = new Date(share.created_at);
-        return createdAt >= thirtyDaysAgo;
-      }).length || 0;
-      
-      const sharesLast60d = sharesData?.filter(share => {
-        const createdAt = new Date(share.created_at);
-        return createdAt >= sixtyDaysAgo;
-      }).length || 0;
-      
-      const sharesLast90d = sharesData?.filter(share => {
-        const createdAt = new Date(share.created_at);
-        return createdAt >= ninetyDaysAgo;
+        return createdAt >= startDate;
       }).length || 0;
 
       // Configurar dados para os gráficos de tempo
+      // Para o gráfico, sempre mostramos dados de vários períodos
+      const now = new Date();
+      const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+      const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+
       const timeData: TimeRangeData[] = [
-        { label: "24 horas", users: usersLast24h, generations: generationsLast24h, shares: sharesLast24h },
-        { label: "7 dias", users: usersLast7d, generations: generationsLast7d, shares: sharesLast7d },
-        { label: "30 dias", users: usersLast30d, generations: generationsLast30d, shares: sharesLast30d },
-        { label: "60 dias", users: usersLast60d, generations: generationsLast60d, shares: sharesLast60d },
-        { label: "90 dias", users: usersLast90d, generations: generationsLast90d, shares: sharesLast90d }
+        { 
+          label: "24 horas", 
+          users: profilesData?.filter(u => new Date(u.registered_at || '') >= oneDayAgo).length || 0,
+          generations: generationsData?.filter(g => new Date(g.created_at) >= oneDayAgo).length || 0,
+          shares: sharesData?.filter(s => new Date(s.created_at) >= oneDayAgo).length || 0 
+        },
+        { 
+          label: "7 dias", 
+          users: profilesData?.filter(u => new Date(u.registered_at || '') >= sevenDaysAgo).length || 0,
+          generations: generationsData?.filter(g => new Date(g.created_at) >= sevenDaysAgo).length || 0,
+          shares: sharesData?.filter(s => new Date(s.created_at) >= sevenDaysAgo).length || 0 
+        },
+        { 
+          label: "30 dias", 
+          users: profilesData?.filter(u => new Date(u.registered_at || '') >= thirtyDaysAgo).length || 0,
+          generations: generationsData?.filter(g => new Date(g.created_at) >= thirtyDaysAgo).length || 0,
+          shares: sharesData?.filter(s => new Date(s.created_at) >= thirtyDaysAgo).length || 0 
+        },
+        { 
+          label: "60 dias", 
+          users: profilesData?.filter(u => new Date(u.registered_at || '') >= sixtyDaysAgo).length || 0,
+          generations: generationsData?.filter(g => new Date(g.created_at) >= sixtyDaysAgo).length || 0,
+          shares: sharesData?.filter(s => new Date(s.created_at) >= sixtyDaysAgo).length || 0 
+        },
+        { 
+          label: "90 dias", 
+          users: profilesData?.filter(u => new Date(u.registered_at || '') >= ninetyDaysAgo).length || 0,
+          generations: generationsData?.filter(g => new Date(g.created_at) >= ninetyDaysAgo).length || 0,
+          shares: sharesData?.filter(s => new Date(s.created_at) >= ninetyDaysAgo).length || 0 
+        }
       ];
 
       setTimeRangeData(timeData);
@@ -268,21 +274,9 @@ const AdminDashboard = () => {
         totalUsers: profilesData?.length || 0,
         proUsers: proUsers.length,
         freeUsers: freeUsers.length,
-        usersLast24h,
-        usersLast7d,
-        usersLast30d,
-        usersLast60d,
-        usersLast90d,
-        generationsLast24h,
-        generationsLast7d,
-        generationsLast30d,
-        generationsLast60d,
-        generationsLast90d,
-        sharesLast24h,
-        sharesLast7d,
-        sharesLast30d,
-        sharesLast60d,
-        sharesLast90d
+        usersInPeriod,
+        generationsInPeriod,
+        sharesInPeriod
       });
 
     } catch (error) {
@@ -301,13 +295,39 @@ const AdminDashboard = () => {
     return <div className="flex items-center justify-center h-screen">Carregando...</div>;
   }
 
+  const getPeriodLabel = (period: PeriodType): string => {
+    const option = periodOptions.find(opt => opt.value === period);
+    return option ? option.label : "Período selecionado";
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <div className="flex-1 bg-gray-50">
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold mb-8">Dashboard de Administrador</h1>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+            <h1 className="text-3xl font-bold mb-4 sm:mb-0">Dashboard de Administrador</h1>
+            
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-5 w-5 text-gray-500" />
+              <Select
+                value={selectedPeriod}
+                onValueChange={(value) => handlePeriodChange(value as PeriodType)}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Selecionar período" />
+                </SelectTrigger>
+                <SelectContent>
+                  {periodOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           
           {loadingStats ? (
             <div className="grid place-items-center h-64">
@@ -349,16 +369,8 @@ const AdminDashboard = () => {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <div className="text-sm text-gray-500">24 horas</div>
-                          <div className="text-lg font-semibold">{stats?.usersLast24h || 0}</div>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-500">7 dias</div>
-                          <div className="text-lg font-semibold">{stats?.usersLast7d || 0}</div>
-                        </div>
-                      </div>
+                      <div className="text-lg font-semibold">{stats?.usersInPeriod || 0}</div>
+                      <div className="text-sm text-gray-500">{getPeriodLabel(selectedPeriod)}</div>
                     </CardContent>
                   </Card>
                   
@@ -373,13 +385,13 @@ const AdminDashboard = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <div className="text-sm text-gray-500">Gerações</div>
-                          <div className="text-lg font-semibold">{stats?.generationsLast30d || 0}</div>
-                          <div className="text-xs text-gray-500">últimos 30 dias</div>
+                          <div className="text-lg font-semibold">{stats?.generationsInPeriod || 0}</div>
+                          <div className="text-xs text-gray-500">{getPeriodLabel(selectedPeriod)}</div>
                         </div>
                         <div>
                           <div className="text-sm text-gray-500">Compartilhamentos</div>
-                          <div className="text-lg font-semibold">{stats?.sharesLast30d || 0}</div>
-                          <div className="text-xs text-gray-500">últimos 30 dias</div>
+                          <div className="text-lg font-semibold">{stats?.sharesInPeriod || 0}</div>
+                          <div className="text-xs text-gray-500">{getPeriodLabel(selectedPeriod)}</div>
                         </div>
                       </div>
                     </CardContent>
@@ -440,36 +452,14 @@ const AdminDashboard = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">24 horas</TableCell>
-                          <TableCell>{stats?.usersLast24h || 0}</TableCell>
-                          <TableCell>{stats?.generationsLast24h || 0}</TableCell>
-                          <TableCell>{stats?.sharesLast24h || 0}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">7 dias</TableCell>
-                          <TableCell>{stats?.usersLast7d || 0}</TableCell>
-                          <TableCell>{stats?.generationsLast7d || 0}</TableCell>
-                          <TableCell>{stats?.sharesLast7d || 0}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">30 dias</TableCell>
-                          <TableCell>{stats?.usersLast30d || 0}</TableCell>
-                          <TableCell>{stats?.generationsLast30d || 0}</TableCell>
-                          <TableCell>{stats?.sharesLast30d || 0}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">60 dias</TableCell>
-                          <TableCell>{stats?.usersLast60d || 0}</TableCell>
-                          <TableCell>{stats?.generationsLast60d || 0}</TableCell>
-                          <TableCell>{stats?.sharesLast60d || 0}</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">90 dias</TableCell>
-                          <TableCell>{stats?.usersLast90d || 0}</TableCell>
-                          <TableCell>{stats?.generationsLast90d || 0}</TableCell>
-                          <TableCell>{stats?.sharesLast90d || 0}</TableCell>
-                        </TableRow>
+                        {timeRangeData.map((item) => (
+                          <TableRow key={item.label}>
+                            <TableCell className="font-medium">{item.label}</TableCell>
+                            <TableCell>{item.users}</TableCell>
+                            <TableCell>{item.generations}</TableCell>
+                            <TableCell>{item.shares}</TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   </CardContent>
