@@ -197,7 +197,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email: data.user.email || "",
           isPro: false,
           dailyQuota: 3,
-          usedToday: 0
+          usedToday: 0,
+          isAdmin: false // Adding the isAdmin property with default value false
         };
         
         setUser(userObj);
