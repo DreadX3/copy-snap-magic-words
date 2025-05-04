@@ -12,11 +12,12 @@ export interface CopyResult {
 
 interface CopyResultsProps {
   results: CopyResult[];
-  onSelectResult: (result: CopyResult) => void;
+  onSelectResult?: (result: CopyResult) => void;
   selectedResult?: CopyResult | null;
+  historyMode?: boolean;
 }
 
-const CopyResults = ({ results, onSelectResult, selectedResult }: CopyResultsProps) => {
+const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = false }: CopyResultsProps) => {
   const { toast } = useToast();
   const [copied, setCopied] = useState<number | null>(null);
   
@@ -58,26 +59,26 @@ const CopyResults = ({ results, onSelectResult, selectedResult }: CopyResultsPro
   
   return (
     <div className="space-y-6">
-      <h3 className="text-xl font-bold mb-4">Escolha sua copywriting</h3>
+      {!historyMode && <h3 className="text-xl font-bold mb-4">Escolha sua copywriting</h3>}
       
       {results.map((result) => (
         <Card 
           key={result.id}
-          className={`overflow-hidden transition-all cursor-pointer ${
-            selectedResult?.id === result.id
+          className={`overflow-hidden transition-all ${!historyMode && "cursor-pointer"} ${
+            selectedResult?.id === result.id && !historyMode
               ? "border-brand-500 ring-2 ring-brand-200"
               : "hover:border-gray-300"
           }`}
-          onClick={() => onSelectResult(result)}
+          onClick={() => onSelectResult && onSelectResult(result)}
         >
           <CardContent className="p-4 relative">
-            {selectedResult?.id === result.id && (
+            {selectedResult?.id === result.id && !historyMode && (
               <div className="absolute -right-1 -top-1 bg-brand-500 text-white p-1 rounded-bl-md">
                 <Check className="h-4 w-4" />
               </div>
             )}
             
-            <p className="text-gray-800 whitespace-pre-wrap">{result.text}</p>
+            <p className="text-sm text-gray-800 whitespace-pre-wrap">{result.text}</p>
             
             <div className="mt-4 flex flex-wrap gap-2">
               <Button

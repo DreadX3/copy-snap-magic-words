@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -151,11 +150,10 @@ const Dashboard = () => {
                         })}
                       </p>
                       <div className="space-y-2">
-                        {item.results.map((result: CopyResult) => (
-                          <div key={result.id} className="border p-2 rounded-md text-sm">
-                            {result.text}
-                          </div>
-                        ))}
+                        <CopyResults
+                          results={item.results}
+                          historyMode={true}
+                        />
                       </div>
                     </div>
                   </div>
