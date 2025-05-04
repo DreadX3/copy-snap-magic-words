@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -9,7 +10,7 @@ import CopyResults, { CopyResult } from "@/components/CopyResults";
 import UsageStats from "@/components/UsageStats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, History, ImageIcon } from "lucide-react";
+import { PlusCircle, History, ImageIcon, BookmarkIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
@@ -22,7 +23,9 @@ const Dashboard = () => {
   const [copyResults, setCopyResults] = useState<CopyResult[]>([]);
   const [selectedResult, setSelectedResult] = useState<CopyResult | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [showFavorites, setShowFavorites] = useState(false);
   const [historyItems, setHistoryItems] = useState<any[]>([]);
+  const [favoriteItems, setFavoriteItems] = useState<CopyResult[]>([]);
   
   // Redirect if not authenticated
   useEffect(() => {
@@ -30,6 +33,36 @@ const Dashboard = () => {
       navigate("/login");
     }
   }, [isAuthenticated, loading, navigate]);
+  
+  // Load favorites on mount
+  useEffect(() => {
+    const loadFavorites = () => {
+      const storedFavorites = localStorage.getItem("copyFavorites");
+      const favoriteIds = storedFavorites ? JSON.parse(storedFavorites) : [];
+      
+      if (favoriteIds.length > 0) {
+        // Get all copy texts from history
+        const history = JSON.parse(localStorage.getItem("history") || "[]");
+        const allCopyResults: CopyResult[] = [];
+        
+        // Extract all copy results from history
+        history.forEach((item: any) => {
+          item.results.forEach((result: CopyResult) => {
+            allCopyResults.push(result);
+          });
+        });
+        
+        // Filter only favorites
+        const favorites = allCopyResults.filter((result) => 
+          favoriteIds.includes(result.id)
+        );
+        
+        setFavoriteItems(favorites);
+      }
+    };
+    
+    loadFavorites();
+  }, [showFavorites]);
   
   const handleImageUpload = (file: File, previewUrl: string) => {
     setImageFile(file);
@@ -48,15 +81,15 @@ const Dashboard = () => {
       // Generate mock results
       const results: CopyResult[] = [
         {
-          id: 1,
+          id: Date.now(),
           text: `✨ Transforme seu visual com nosso tênis ultra confortável! Design moderno e amortecimento que você precisa para seu dia a dia. ${options.includeEmojis ? '👟 🔥' : ''} ${options.includeHashtags ? '#EstiloUrbano #Conforto #MustHave' : ''}`,
         },
         {
-          id: 2,
+          id: Date.now() + 1,
           text: `O tênis perfeito para quem não abre mão de conforto e estilo! Disponível em várias cores para combinar com todos os seus looks. ${options.includeEmojis ? '😍 👌' : ''} ${options.includeHashtags ? '#ModaEsportiva #LookDoDia #Tendência' : ''}`,
         },
         {
-          id: 3,
+          id: Date.now() + 2,
           text: `Qualidade premium e design exclusivo para seus pés! Nosso novo tênis vai levar seu conforto a outro nível. Garanta já o seu! ${options.includeEmojis ? '🛍️ ⚡' : ''} ${options.includeHashtags ? '#CalçadoConfortável #NovaColeção #MelhorPreço' : ''}`,
         },
       ];
@@ -108,7 +141,10 @@ const Dashboard = () => {
             <h1 className="text-2xl font-bold">Histórico</h1>
             <Button
               variant="outline"
-              onClick={() => setShowHistory(false)}
+              onClick={() => {
+                setShowHistory(false);
+                setShowFavorites(false);
+              }}
             >
               Nova geração
             </Button>
@@ -122,7 +158,10 @@ const Dashboard = () => {
               <Button
                 variant="outline"
                 className="mt-4"
-                onClick={() => setShowHistory(false)}
+                onClick={() => {
+                  setShowHistory(false);
+                  setShowFavorites(false);
+                }}
               >
                 Nova geração
               </Button>
@@ -157,6 +196,69 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    if (showFavorites) {
+      return (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Favoritos</h1>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowHistory(false);
+                setShowFavorites(false);
+              }}
+            >
+              Nova geração
+            </Button>
+          </div>
+          
+          {favoriteItems.length === 0 ? (
+            <div className="text-center py-12">
+              <BookmarkIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900">Nenhum favorito encontrado</h3>
+              <p className="mt-1 text-gray-500">Favorite textos para encontrá-los rapidamente depois.</p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => {
+                  setShowHistory(false);
+                  setShowFavorites(false);
+                }}
+              >
+                Nova geração
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {favoriteItems.map((result) => (
+                <Card key={result.id} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <p className="text-sm text-gray-800 whitespace-pre-wrap">{result.text}</p>
+                    <div className="mt-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center"
+                        onClick={() => {
+                          navigator.clipboard.writeText(result.text);
+                          toast({
+                            title: "Copiado!",
+                            description: "Texto copiado para a área de transferência",
+                          });
+                        }}
+                      >
+                        <Copy className="h-4 w-4 mr-2" /> Copiar
+                      </Button>
+                    </div>
+                  </CardContent>
                 </Card>
               ))}
             </div>
@@ -219,6 +321,28 @@ const Dashboard = () => {
           
           <Card>
             <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Favoritos</CardTitle>
+              <CardDescription>
+                Acesse seus textos favoritos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => {
+                  setShowFavorites(true);
+                  setShowHistory(false);
+                }}
+                variant="outline" 
+                className="w-full"
+              >
+                <BookmarkIcon className="mr-2 h-4 w-4" />
+                Ver favoritos
+              </Button>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-3">
               <CardTitle className="text-lg">Histórico</CardTitle>
               <CardDescription>
                 Acesse suas gerações anteriores
@@ -226,7 +350,10 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <Button 
-                onClick={() => setShowHistory(true)}
+                onClick={() => {
+                  setShowHistory(true);
+                  setShowFavorites(false);
+                }}
                 variant="outline" 
                 className="w-full"
               >

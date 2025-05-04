@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, Copy, Facebook, Instagram, Share2, Twitter } from "lucide-react";
+import { Check, Copy, Facebook, Instagram, Share2, Twitter, BookmarkPlus, BookmarkCheck } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 export interface CopyResult {
@@ -20,6 +20,11 @@ interface CopyResultsProps {
 const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = false }: CopyResultsProps) => {
   const { toast } = useToast();
   const [copied, setCopied] = useState<number | null>(null);
+  const [favorites, setFavorites] = useState<number[]>(() => {
+    // Load favorites from localStorage on component mount
+    const storedFavorites = localStorage.getItem("copyFavorites");
+    return storedFavorites ? JSON.parse(storedFavorites) : [];
+  });
   
   const copyToClipboard = (text: string, id: number) => {
     navigator.clipboard.writeText(text).then(() => {
@@ -55,6 +60,22 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
     }
   };
   
+  const toggleFavorite = (id: number) => {
+    const newFavorites = favorites.includes(id)
+      ? favorites.filter(favId => favId !== id)
+      : [...favorites, id];
+    
+    setFavorites(newFavorites);
+    localStorage.setItem("copyFavorites", JSON.stringify(newFavorites));
+    
+    toast({
+      title: favorites.includes(id) ? "Removido dos favoritos" : "Adicionado aos favoritos",
+      description: favorites.includes(id) 
+        ? "Texto removido da sua lista de favoritos" 
+        : "Texto adicionado à sua lista de favoritos",
+    });
+  };
+  
   if (results.length === 0) return null;
   
   const textToShare = selectedResult ? selectedResult.text : results[0].text;
@@ -82,8 +103,28 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
             
             <p className="text-sm text-gray-800 whitespace-pre-wrap">{result.text}</p>
             
-            {historyMode && (
-              <div className="mt-4">
+            <div className="mt-4 flex justify-between items-center">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="flex items-center text-gray-600 hover:text-brand-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFavorite(result.id);
+                }}
+              >
+                {favorites.includes(result.id) ? (
+                  <>
+                    <BookmarkCheck className="h-4 w-4 mr-2" /> Favoritado
+                  </>
+                ) : (
+                  <>
+                    <BookmarkPlus className="h-4 w-4 mr-2" /> Favoritar
+                  </>
+                )}
+              </Button>
+              
+              {historyMode && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -103,8 +144,8 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
                     </>
                   )}
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </CardContent>
         </Card>
       ))}
