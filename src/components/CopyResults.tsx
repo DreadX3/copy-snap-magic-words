@@ -57,6 +57,8 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
   
   if (results.length === 0) return null;
   
+  const textToShare = selectedResult ? selectedResult.text : results[0].text;
+  
   return (
     <div className="space-y-6">
       {!historyMode && <h3 className="text-xl font-bold mb-4">Escolha sua copywriting</h3>}
@@ -80,17 +82,49 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
             
             <p className="text-sm text-gray-800 whitespace-pre-wrap">{result.text}</p>
             
-            <div className="mt-4 flex flex-wrap gap-2">
+            {historyMode && (
+              <div className="mt-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex items-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    copyToClipboard(result.text, result.id);
+                  }}
+                >
+                  {copied === result.id ? (
+                    <>
+                      <Check className="h-4 w-4 mr-2" /> Copiado
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-2" /> Copiar
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+      
+      {/* Sharing section - shown once per result set */}
+      {!historyMode && (
+        <Card className="border-dashed border-gray-300">
+          <CardContent className="p-4">
+            <h4 className="text-sm font-medium mb-3">Compartilhar nas redes sociais</h4>
+            <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
                 variant="outline"
                 className="flex items-center"
                 onClick={(e) => {
                   e.stopPropagation();
-                  copyToClipboard(result.text, result.id);
+                  copyToClipboard(textToShare, -1);
                 }}
               >
-                {copied === result.id ? (
+                {copied === -1 ? (
                   <>
                     <Check className="h-4 w-4 mr-2" /> Copiado
                   </>
@@ -107,7 +141,7 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
                 className="flex items-center"
                 onClick={(e) => {
                   e.stopPropagation();
-                  shareOnSocial(result.text, 'general');
+                  shareOnSocial(textToShare, 'general');
                 }}
               >
                 <Share2 className="h-4 w-4 mr-2" /> Compartilhar
@@ -119,7 +153,7 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
                 className="flex items-center text-[#1DA1F2]"
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(result.text)}`, '_blank');
+                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(textToShare)}`, '_blank');
                 }}
               >
                 <Twitter className="h-4 w-4 mr-2" />
@@ -132,7 +166,7 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
                 className="flex items-center text-[#3b5998]"
                 onClick={(e) => {
                   e.stopPropagation();
-                  shareOnSocial(result.text, 'facebook');
+                  shareOnSocial(textToShare, 'facebook');
                 }}
               >
                 <Facebook className="h-4 w-4 mr-2" />
@@ -145,7 +179,7 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
                 className="flex items-center text-[#C13584]"
                 onClick={(e) => {
                   e.stopPropagation();
-                  copyToClipboard(result.text, result.id);
+                  copyToClipboard(textToShare, -1);
                   toast({
                     title: "Copiado para Instagram",
                     description: "Texto copiado. Abra o Instagram para colar.",
@@ -158,7 +192,72 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
             </div>
           </CardContent>
         </Card>
-      ))}
+      )}
+      
+      {/* Adding sharing functionality for history mode */}
+      {historyMode && (
+        <Card className="border-dashed border-gray-300 mt-4">
+          <CardContent className="p-4">
+            <h4 className="text-sm font-medium mb-3">Compartilhar nas redes sociais</h4>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex items-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  shareOnSocial(results[0].text, 'general');
+                }}
+              >
+                <Share2 className="h-4 w-4 mr-2" /> Compartilhar
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex items-center text-[#1DA1F2]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(results[0].text)}`, '_blank');
+                }}
+              >
+                <Twitter className="h-4 w-4 mr-2" />
+                Twitter
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex items-center text-[#3b5998]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  shareOnSocial(results[0].text, 'facebook');
+                }}
+              >
+                <Facebook className="h-4 w-4 mr-2" />
+                Facebook
+              </Button>
+              
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex items-center text-[#C13584]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(results[0].text, -1);
+                  toast({
+                    title: "Copiado para Instagram",
+                    description: "Texto copiado. Abra o Instagram para colar.",
+                  });
+                }}
+              >
+                <Instagram className="h-4 w-4 mr-2" />
+                Instagram
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
