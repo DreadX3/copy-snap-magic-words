@@ -10,7 +10,7 @@ import CopyResults, { CopyResult } from "@/components/CopyResults";
 import UsageStats from "@/components/UsageStats";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, History, ImageIcon, BookmarkIcon } from "lucide-react";
+import { Copy, PlusCircle, History, ImageIcon, BookmarkIcon } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 const Dashboard = () => {
