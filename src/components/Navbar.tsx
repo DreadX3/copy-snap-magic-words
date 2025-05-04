@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Bookmark, History } from "lucide-react";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -30,6 +30,14 @@ const Navbar = () => {
               <>
                 <Link to="/dashboard" className="text-gray-600 hover:text-gray-900 px-3 py-2 font-medium">
                   Dashboard
+                </Link>
+                <Link to="/dashboard?view=favorites" className="text-gray-600 hover:text-gray-900 px-3 py-2 font-medium flex items-center space-x-1">
+                  <Bookmark size={18} />
+                  <span>Favoritos</span>
+                </Link>
+                <Link to="/dashboard?view=history" className="text-gray-600 hover:text-gray-900 px-3 py-2 font-medium flex items-center space-x-1">
+                  <History size={18} />
+                  <span>Histórico</span>
                 </Link>
                 {user.isAdmin && (
                   <Link to="/admin" className="text-gray-600 hover:text-gray-900 px-3 py-2 font-medium">
@@ -86,6 +94,14 @@ const Navbar = () => {
               <>
                 <Link to="/dashboard" className="block px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
                   Dashboard
+                </Link>
+                <Link to="/dashboard?view=favorites" className="block px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center space-x-1">
+                  <Bookmark size={18} />
+                  <span>Favoritos</span>
+                </Link>
+                <Link to="/dashboard?view=history" className="block px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center space-x-1">
+                  <History size={18} />
+                  <span>Histórico</span>
                 </Link>
                 {user.isAdmin && (
                   <Link to="/admin" className="block px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900">
