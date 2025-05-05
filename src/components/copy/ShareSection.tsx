@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Check, Copy, Facebook, Instagram, Share2, Twitter } from "lucide-react";
+import { Check, Copy, Facebook, Instagram, Share2, Twitter, Linkedin } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { ShareTarget } from "./types";
 
@@ -59,7 +59,7 @@ const ShareSection = ({ text }: ShareSectionProps) => {
       platform: 'facebook',
       name: 'Facebook',
       color: '#3b5998',
-      action: () => shareOnSocial('facebook'),
+      action: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}&quote=${encodeURIComponent(text)}`, '_blank'),
     },
     {
       platform: 'instagram',
@@ -72,6 +72,12 @@ const ShareSection = ({ text }: ShareSectionProps) => {
           description: "Texto copiado. Abra o Instagram para colar.",
         });
       },
+    },
+    {
+      platform: 'linkedin',
+      name: 'LinkedIn',
+      color: '#0077B5',
+      action: () => window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent("CopySnap AI")}&summary=${encodeURIComponent(text)}`, '_blank'),
     }
   ];
   
@@ -113,11 +119,12 @@ const ShareSection = ({ text }: ShareSectionProps) => {
               variant="outline"
               className="flex items-center"
               style={{ color: target.color }}
-              onClick={() => target.action(text)}
+              onClick={() => target.action()}
             >
               {target.platform === 'twitter' && <Twitter className="h-4 w-4 mr-2" />}
               {target.platform === 'facebook' && <Facebook className="h-4 w-4 mr-2" />}
               {target.platform === 'instagram' && <Instagram className="h-4 w-4 mr-2" />}
+              {target.platform === 'linkedin' && <Linkedin className="h-4 w-4 mr-2" />}
               {target.name}
             </Button>
           ))}

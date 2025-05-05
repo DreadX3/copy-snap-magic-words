@@ -8,5 +8,5 @@ export interface ShareTarget {
   platform: string;
   name: string;
   color: string;
-  action: (text: string) => void;
+  action: (text?: string) => void;
 }
