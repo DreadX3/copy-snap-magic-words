@@ -6,6 +6,10 @@ import { BookmarkIcon, History, PlusCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const SidePanel = () => {
+  const handleSubscribeToPro = () => {
+    window.open("https://buy.stripe.com/test_eVa4jp7RUcM16xa4gg", "_blank");
+  };
+
   return (
     <>
       <UsageStats />
@@ -78,7 +82,7 @@ const SidePanel = () => {
               <span>Recursos exclusivos</span>
             </li>
           </ul>
-          <Button className="w-full">
+          <Button className="w-full" onClick={handleSubscribeToPro}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Assinar PRO
           </Button>
