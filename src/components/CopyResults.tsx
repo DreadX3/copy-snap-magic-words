@@ -43,7 +43,7 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
             <p className="text-sm text-gray-800 whitespace-pre-wrap">{result.text}</p>
             
             <div className="mt-4 flex justify-between items-center">
-              <FavoriteButton id={result.id} size="sm" />
+              <FavoriteButton result={result} size="sm" />
               
               {historyMode && (
                 <CopyButton text={result.text} size="sm" />

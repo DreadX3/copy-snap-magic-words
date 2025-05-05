@@ -3,30 +3,32 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { BookmarkPlus, BookmarkCheck } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { CopyResult } from "@/components/copy/types";
 
 interface FavoriteButtonProps {
-  id: number;
+  result: CopyResult;
   size?: "sm" | "default";
+  showRemoveOnly?: boolean;
 }
 
-const FavoriteButton = ({ id, size = "default" }: FavoriteButtonProps) => {
+const FavoriteButton = ({ result, size = "default", showRemoveOnly = false }: FavoriteButtonProps) => {
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
   
   // Check if item is already favorited on mount
   useEffect(() => {
     const storedFavorites = localStorage.getItem("copyFavorites");
-    const favorites = storedFavorites ? JSON.parse(storedFavorites) : [];
-    setIsFavorite(favorites.includes(id));
-  }, [id]);
+    const favorites: CopyResult[] = storedFavorites ? JSON.parse(storedFavorites) : [];
+    setIsFavorite(favorites.some(fav => fav.id === result.id));
+  }, [result.id]);
   
   const toggleFavorite = () => {
     const storedFavorites = localStorage.getItem("copyFavorites");
-    const favorites = storedFavorites ? JSON.parse(storedFavorites) : [];
+    const favorites: CopyResult[] = storedFavorites ? JSON.parse(storedFavorites) : [];
     
     if (isFavorite) {
       // Remove from favorites
-      const newFavorites = favorites.filter((favId: number) => favId !== id);
+      const newFavorites = favorites.filter((fav) => fav.id !== result.id);
       localStorage.setItem("copyFavorites", JSON.stringify(newFavorites));
       setIsFavorite(false);
       
@@ -36,7 +38,7 @@ const FavoriteButton = ({ id, size = "default" }: FavoriteButtonProps) => {
       });
     } else {
       // Add to favorites
-      const newFavorites = [...favorites, id];
+      const newFavorites = [...favorites, result];
       localStorage.setItem("copyFavorites", JSON.stringify(newFavorites));
       setIsFavorite(true);
       
@@ -54,9 +56,9 @@ const FavoriteButton = ({ id, size = "default" }: FavoriteButtonProps) => {
       className="flex items-center text-gray-600 hover:text-brand-500"
       onClick={toggleFavorite}
     >
-      {isFavorite ? (
+      {isFavorite || showRemoveOnly ? (
         <>
-          <BookmarkCheck className="h-4 w-4 mr-2" /> Favoritado
+          <BookmarkCheck className="h-4 w-4 mr-2" /> {showRemoveOnly ? "Remover" : "Favoritado"}
         </>
       ) : (
         <>

@@ -1,17 +1,32 @@
 
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookmarkIcon, Copy } from "lucide-react";
+import { BookmarkIcon, Copy, RefreshCw, X } from "lucide-react";
 import { CopyResult } from "@/components/copy/types";
+import FavoriteButton from "@/components/copy/FavoriteButton";
 
 interface FavoritesViewProps {
-  favoriteItems: CopyResult[];
   onNewGeneration: () => void;
 }
 
-const FavoritesView = ({ favoriteItems, onNewGeneration }: FavoritesViewProps) => {
+const FavoritesView = ({ onNewGeneration }: FavoritesViewProps) => {
   const { toast } = useToast();
+  const [favoriteItems, setFavoriteItems] = useState<CopyResult[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    loadFavorites();
+  }, []);
+
+  const loadFavorites = () => {
+    setIsRefreshing(true);
+    const storedFavorites = localStorage.getItem("copyFavorites");
+    const favorites: CopyResult[] = storedFavorites ? JSON.parse(storedFavorites) : [];
+    setFavoriteItems(favorites);
+    setIsRefreshing(false);
+  };
 
   const handleCopyText = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -21,16 +36,43 @@ const FavoritesView = ({ favoriteItems, onNewGeneration }: FavoritesViewProps) =
     });
   };
 
+  const handleRemoveFavorite = (result: CopyResult) => {
+    const storedFavorites = localStorage.getItem("copyFavorites");
+    const favorites: CopyResult[] = storedFavorites ? JSON.parse(storedFavorites) : [];
+    
+    const newFavorites = favorites.filter((fav) => fav.id !== result.id);
+    localStorage.setItem("copyFavorites", JSON.stringify(newFavorites));
+    
+    toast({
+      title: "Removido dos favoritos",
+      description: "Texto removido da sua lista de favoritos",
+    });
+    
+    // Update the state
+    setFavoriteItems(newFavorites);
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Favoritos</h1>
-        <Button
-          variant="outline"
-          onClick={onNewGeneration}
-        >
-          Nova geração
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadFavorites}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onNewGeneration}
+          >
+            Nova geração
+          </Button>
+        </div>
       </div>
       
       {favoriteItems.length === 0 ? (
@@ -52,7 +94,15 @@ const FavoritesView = ({ favoriteItems, onNewGeneration }: FavoritesViewProps) =
             <Card key={result.id} className="overflow-hidden">
               <CardContent className="p-4">
                 <p className="text-sm text-gray-800 whitespace-pre-wrap">{result.text}</p>
-                <div className="mt-4">
+                <div className="mt-4 flex justify-between items-center">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex items-center text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => handleRemoveFavorite(result)}
+                  >
+                    <X className="h-4 w-4 mr-2" /> Remover dos favoritos
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
