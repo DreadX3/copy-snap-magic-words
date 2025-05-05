@@ -4,7 +4,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import ImageUploader from "@/components/ImageUploader";
 import CopyGenerator, { GenerateOptions } from "@/components/CopyGenerator";
-import CopyResults, { CopyResult } from "@/components/CopyResults";
+import CopyResults from "@/components/CopyResults";
+import { CopyResult } from "@/components/copy/types";
 import SidePanel from "@/components/dashboard/SidePanel";
 import { useAuth } from "@/context/AuthContext";
 
