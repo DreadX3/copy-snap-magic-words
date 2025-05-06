@@ -1,6 +1,6 @@
 
 export interface CopyResult {
-  id: number;
+  id: string;
   text: string;
 }
 
