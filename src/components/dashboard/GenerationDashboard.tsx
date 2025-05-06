@@ -54,10 +54,34 @@ const GenerationDashboard = ({ onHistoryUpdate }: GenerationDashboardProps) => {
       
       // Update user quota if not PRO
       if (user && !user.isPro) {
+        // Get current day and month
+        const today = new Date();
+        const currentDay = today.getDate();
+        const currentMonth = today.getMonth() + 1;
+        const currentYear = today.getFullYear();
+        
+        // Check if we need to reset daily or monthly counts
+        let usedToday = user.usedToday || 0;
+        let usedMonth = user.usedMonth || 0;
+        
+        if (user.lastUsageDay !== currentDay) {
+          usedToday = 0;
+        }
+        
+        if (user.lastUsageMonth !== currentMonth || user.lastUsageYear !== currentYear) {
+          usedMonth = 0;
+        }
+        
+        // Update counts
         const updatedUser = {
           ...user,
-          usedToday: (user.usedToday || 0) + 1,
+          usedToday: usedToday + 1,
+          usedMonth: usedMonth + 1,
+          lastUsageDay: currentDay,
+          lastUsageMonth: currentMonth,
+          lastUsageYear: currentYear
         };
+        
         localStorage.setItem("user", JSON.stringify(updatedUser));
       }
       
@@ -77,6 +101,7 @@ const GenerationDashboard = ({ onHistoryUpdate }: GenerationDashboardProps) => {
         results,
         date: new Date().toISOString(),
       };
+      
       const history = JSON.parse(localStorage.getItem("history") || "[]");
       history.unshift(newHistoryItem);
       localStorage.setItem("history", JSON.stringify(history.slice(0, 10))); // Keep only last 10
@@ -128,6 +153,7 @@ const GenerationDashboard = ({ onHistoryUpdate }: GenerationDashboardProps) => {
                 results={copyResults}
                 onSelectResult={setSelectedResult}
                 selectedResult={selectedResult}
+                imageUrl={imageUrl}
               />
             </div>
           )}

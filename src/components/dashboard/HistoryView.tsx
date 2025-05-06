@@ -66,6 +66,7 @@ const HistoryView = ({ historyItems, onNewGeneration }: HistoryViewProps) => {
                     <CopyResults
                       results={item.results}
                       historyMode={true}
+                      imageUrl={item.imageUrl}
                     />
                   </div>
                 </div>

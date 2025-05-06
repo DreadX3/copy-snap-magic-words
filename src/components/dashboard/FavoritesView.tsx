@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookmarkIcon, Copy, RefreshCw, X } from "lucide-react";
+import { BookmarkIcon, Copy, RefreshCw, Share2, X } from "lucide-react";
 import { CopyResult } from "@/components/copy/types";
 import FavoriteButton from "@/components/copy/FavoriteButton";
+import ShareSection from "@/components/copy/ShareSection";
 
 interface FavoritesViewProps {
   onNewGeneration: () => void;
@@ -103,14 +104,33 @@ const FavoritesView = ({ onNewGeneration }: FavoritesViewProps) => {
                   >
                     <X className="h-4 w-4 mr-2" /> Remover dos favoritos
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex items-center"
-                    onClick={() => handleCopyText(result.text)}
-                  >
-                    <Copy className="h-4 w-4 mr-2" /> Copiar
-                  </Button>
+                  <div className="flex space-x-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex items-center"
+                      onClick={() => handleCopyText(result.text)}
+                    >
+                      <Copy className="h-4 w-4 mr-2" /> Copiar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex items-center"
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: 'CopySnap AI',
+                            text: result.text,
+                          }).catch(err => console.error('Error sharing:', err));
+                        } else {
+                          handleCopyText(result.text);
+                        }
+                      }}
+                    >
+                      <Share2 className="h-4 w-4 mr-2" /> Compartilhar
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

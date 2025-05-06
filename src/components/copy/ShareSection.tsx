@@ -8,9 +8,10 @@ import { ShareTarget } from "./types";
 
 interface ShareSectionProps {
   text: string;
+  imageUrl?: string | null;
 }
 
-const ShareSection = ({ text }: ShareSectionProps) => {
+const ShareSection = ({ text, imageUrl }: ShareSectionProps) => {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   
@@ -31,10 +32,26 @@ const ShareSection = ({ text }: ShareSectionProps) => {
   const shareOnSocial = async (platform: string) => {
     if (navigator.share) {
       try {
-        await navigator.share({
+        const shareData: any = {
           title: 'CopySnap AI',
           text: text,
-        });
+        };
+        
+        // If we have an image, we can add it to the share data
+        // Note: Not all platforms support sharing images
+        if (imageUrl && imageUrl.startsWith('data:')) {
+          try {
+            // Convert data URL to blob
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            const file = new File([blob], "copysnap-image.png", { type: blob.type });
+            shareData.files = [file];
+          } catch (e) {
+            console.error("Error preparing image for sharing:", e);
+          }
+        }
+        
+        await navigator.share(shareData);
         toast({
           title: "Compartilhado!",
           description: `Texto compartilhado com sucesso`,
@@ -43,7 +60,7 @@ const ShareSection = ({ text }: ShareSectionProps) => {
         console.error('Erro ao compartilhar:', error);
       }
     } else {
-      // Fallback para copiar
+      // Fallback to copy
       copyToClipboard();
     }
   };
@@ -53,7 +70,10 @@ const ShareSection = ({ text }: ShareSectionProps) => {
       platform: 'twitter',
       name: 'Twitter',
       color: '#1DA1F2',
-      action: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank'),
+      action: () => {
+        const tweetText = encodeURIComponent(text);
+        window.open(`https://twitter.com/intent/tweet?text=${tweetText}`, '_blank');
+      },
     },
     {
       platform: 'facebook',
@@ -79,6 +99,20 @@ const ShareSection = ({ text }: ShareSectionProps) => {
     <Card className="border-dashed border-gray-300">
       <CardContent className="p-4">
         <h4 className="text-sm font-medium mb-3">Compartilhar nas redes sociais</h4>
+        
+        {imageUrl && (
+          <div className="mb-4">
+            <div className="text-xs text-gray-500 mb-1">Imagem do produto incluída no compartilhamento</div>
+            <div className="w-16 h-16 rounded border overflow-hidden">
+              <img 
+                src={imageUrl} 
+                alt="Produto" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        )}
+        
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
@@ -113,7 +147,7 @@ const ShareSection = ({ text }: ShareSectionProps) => {
               variant="outline"
               className="flex items-center"
               style={{ color: target.color }}
-              onClick={() => target.action(text)}
+              onClick={() => target.action()}
             >
               {target.platform === 'twitter' && <Twitter className="h-4 w-4 mr-2" />}
               {target.platform === 'facebook' && <Facebook className="h-4 w-4 mr-2" />}

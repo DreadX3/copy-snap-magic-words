@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import ResetUsers from "./pages/ResetUsers";
 import AdminDashboard from "./pages/AdminDashboard";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/reset-users" element={<ResetUsers />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

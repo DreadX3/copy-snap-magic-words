@@ -10,12 +10,20 @@ interface CopyResultsProps {
   onSelectResult?: (result: CopyResult) => void;
   selectedResult?: CopyResult | null;
   historyMode?: boolean;
+  imageUrl?: string | null;
 }
 
-const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = false }: CopyResultsProps) => {
+const CopyResults = ({ 
+  results, 
+  onSelectResult, 
+  selectedResult, 
+  historyMode = false,
+  imageUrl = null
+}: CopyResultsProps) => {
   if (results.length === 0) return null;
   
   const textToShare = selectedResult ? selectedResult.text : results[0].text;
+  const selectedImageUrl = imageUrl || (historyMode ? null : null);
   
   return (
     <div className="space-y-6">
@@ -54,10 +62,10 @@ const CopyResults = ({ results, onSelectResult, selectedResult, historyMode = fa
       ))}
       
       {/* Sharing section */}
-      {!historyMode && <ShareSection text={textToShare} />}
+      {!historyMode && <ShareSection text={textToShare} imageUrl={selectedImageUrl} />}
       
       {/* Sharing section for history mode */}
-      {historyMode && <ShareSection text={results[0].text} />}
+      {historyMode && <ShareSection text={results[0].text} imageUrl={selectedImageUrl} />}
     </div>
   );
 };
