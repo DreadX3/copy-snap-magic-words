@@ -14,10 +14,6 @@ const UsageStats = () => {
   const dailyQuota = user.dailyQuota || 3;
   const usedToday = user.usedToday || 0;
   const usagePercentage = (usedToday / dailyQuota) * 100;
-
-  const handleUpgradeToPro = () => {
-    window.open("https://buy.stripe.com/test_eVa4jp7RUcM16xa4gg", "_blank");
-  };
   
   return (
     <Card>
@@ -44,7 +40,7 @@ const UsageStats = () => {
             <Progress value={usagePercentage} className="h-2" />
             
             <div className="mt-4">
-              <Button variant="outline" className="w-full" onClick={handleUpgradeToPro}>
+              <Button variant="outline" className="w-full">
                 Upgrade para PRO
               </Button>
             </div>
