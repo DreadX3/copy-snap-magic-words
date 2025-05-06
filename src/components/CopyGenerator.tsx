@@ -59,7 +59,7 @@ const CopyGenerator = ({ imageUrl, onGenerate, isGenerating }: CopyGeneratorProp
       }
       
       // Check if user has reached monthly limit
-      if (!data.subscribed && user?.usedMonth >= data.monthlyQuota) {
+      if (!data.subscribed && (user?.usedMonth || 0) >= data.monthlyQuota) {
         setUsageError(`Você atingiu seu limite mensal de ${data.monthlyQuota} gerações. Atualize para o plano PRO para gerações ilimitadas.`);
       }
     } catch (error) {
