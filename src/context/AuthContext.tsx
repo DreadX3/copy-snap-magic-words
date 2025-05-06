@@ -10,7 +10,7 @@ interface User {
   isPro: boolean;
   dailyQuota: number;
   usedToday: number;
-  isAdmin: boolean;
+  isAdmin: boolean; // Adicionando propriedade isAdmin
 }
 
 interface AuthContextType {
@@ -20,7 +20,6 @@ interface AuthContextType {
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
-  checkSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -32,45 +31,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Check subscription status using the Edge Function
-  const checkSubscription = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-      
-      if (error) {
-        console.error("Erro ao verificar assinatura:", error);
-        return;
-      }
-      
-      if (data.isPro !== user.isPro) {
-        setUser(prev => prev ? { ...prev, isPro: data.isPro, dailyQuota: data.isPro ? 999 : 3 } : null);
-        
-        // Update localStorage
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          localStorage.setItem("user", JSON.stringify({
-            ...parsedUser,
-            isPro: data.isPro,
-            dailyQuota: data.isPro ? 999 : 3
-          }));
-        }
-        
-        // Notify user of change if subscription was activated
-        if (data.isPro && !user.isPro) {
-          toast({
-            title: "Plano PRO Ativado!",
-            description: "Seu plano PRO foi ativado com sucesso. Aproveite os recursos exclusivos!",
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Erro ao verificar assinatura:", error);
-    }
-  };
 
   // Carregar usuário do localStorage ou do Supabase ao montar
   useEffect(() => {
@@ -109,12 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           setUser(userObj);
           localStorage.setItem("user", JSON.stringify(userObj));
-          
-          // Verificar status da assinatura
-          setTimeout(() => {
-            // Using setTimeout to ensure auth context is fully loaded
-            checkSubscription();
-          }, 1000);
           
           // Se for admin, redirecionar para o painel admin
           if (isAdmin && window.location.pathname === '/login') {
@@ -198,12 +152,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           navigate("/dashboard");
         }
-        
-        // Verificar status da assinatura
-        setTimeout(() => {
-          // Using setTimeout to ensure auth context is fully loaded
-          checkSubscription();
-        }, 1000);
       }
     } catch (error) {
       toast({
@@ -291,7 +239,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         isAuthenticated: !!user,
-        checkSubscription
       }}
     >
       {children}

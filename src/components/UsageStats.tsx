@@ -3,15 +3,10 @@ import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { BadgeCheck, Loader2 } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/lib/supabase";
+import { BadgeCheck } from "lucide-react";
 
 const UsageStats = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   
   if (!user) return null;
   
@@ -20,32 +15,8 @@ const UsageStats = () => {
   const usedToday = user.usedToday || 0;
   const usagePercentage = (usedToday / dailyQuota) * 100;
 
-  const handleUpgradeToPro = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Call the Stripe checkout session creation function
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { },
-      });
-      
-      if (error) throw error;
-      
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error("Falha ao criar a sessão de checkout");
-      }
-    } catch (error) {
-      console.error("Erro ao iniciar checkout:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível iniciar o processo de pagamento. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const handleUpgradeToPro = () => {
+    window.open("https://buy.stripe.com/test_eVa4jp7RUcM16xa4gg", "_blank");
   };
   
   return (
@@ -73,20 +44,8 @@ const UsageStats = () => {
             <Progress value={usagePercentage} className="h-2" />
             
             <div className="mt-4">
-              <Button 
-                variant="pro" 
-                className="w-full" 
-                onClick={handleUpgradeToPro}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  "Upgrade para PRO"
-                )}
+              <Button variant="outline" className="w-full" onClick={handleUpgradeToPro}>
+                Upgrade para PRO
               </Button>
             </div>
           </>
